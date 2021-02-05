@@ -1,0 +1,297 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="ChangeListManager">
+    <list default="true" id="d0657714-3e69-4174-9c18-1c2a489fd7cd" name="Default Changelist" comment="" />
+    <option name="SHOW_DIALOG" value="false" />
+    <option name="HIGHLIGHT_CONFLICTS" value="true" />
+    <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
+    <option name="LAST_RESOLUTION" value="IGNORE" />
+  </component>
+  <component name="FileTemplateManagerImpl">
+    <option name="RECENT_TEMPLATES">
+      <list>
+        <option value="Python Script" />
+      </list>
+    </option>
+  </component>
+  <component name="ProjectId" id="1m6eFLnnpJJR93GQKKwGtE3Ny49" />
+  <component name="ProjectLevelVcsManager" settingsEditedManually="true" />
+  <component name="ProjectViewState">
+    <option name="hideEmptyMiddlePackages" value="true" />
+    <option name="showLibraryContents" value="true" />
+  </component>
+  <component name="PropertiesComponent">
+    <property name="RunOnceActivity.OpenProjectViewOnStart" value="true" />
+    <property name="last_opened_file_path" value="$PROJECT_DIR$/../../project_opensource/yolov5-master2021.1.14" />
+    <property name="settings.editor.selected.configurable" value="com.jetbrains.python.configuration.PyActiveSdkModuleConfigurable" />
+  </component>
+  <component name="PyDebuggerOptionsProvider">
+    <option name="mySupportGeventDebugging" value="true" />
+  </component>
+  <component name="RunManager" selected="Python.a">
+    <configuration name="a" type="PythonConfigurationType" factoryName="Python" temporary="true" nameIsGenerated="true">
+      <module name="pytorch_script" />
+      <option name="INTERPRETER_OPTIONS" value="" />
+      <option name="PARENT_ENVS" value="true" />
+      <envs>
+        <env name="PYTHONUNBUFFERED" value="1" />
+      </envs>
+      <option name="SDK_HOME" value="" />
+      <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$/projects/nano_det" />
+      <option name="IS_MODULE_SDK" value="true" />
+      <option name="ADD_CONTENT_ROOTS" value="true" />
+      <option name="ADD_SOURCE_ROOTS" value="true" />
+      <option name="SCRIPT_NAME" value="$PROJECT_DIR$/projects/nano_det/a.py" />
+      <option name="PARAMETERS" value="" />
+      <option name="SHOW_COMMAND_LINE" value="false" />
+      <option name="EMULATE_TERMINAL" value="false" />
+      <option name="MODULE_MODE" value="false" />
+      <option name="REDIRECT_INPUT" value="false" />
+      <option name="INPUT_FILE" value="" />
+      <method v="2" />
+    </configuration>
+    <configuration name="onnx_vertify" type="PythonConfigurationType" factoryName="Python" temporary="true" nameIsGenerated="true">
+      <module name="pytorch_script" />
+      <option name="INTERPRETER_OPTIONS" value="" />
+      <option name="PARENT_ENVS" value="true" />
+      <envs>
+        <env name="PYTHONUNBUFFERED" value="1" />
+      </envs>
+      <option name="SDK_HOME" value="" />
+      <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$/utils_frequent/export" />
+      <option name="IS_MODULE_SDK" value="true" />
+      <option name="ADD_CONTENT_ROOTS" value="true" />
+      <option name="ADD_SOURCE_ROOTS" value="true" />
+      <option name="SCRIPT_NAME" value="$PROJECT_DIR$/utils_frequent/export/onnx_vertify.py" />
+      <option name="PARAMETERS" value="" />
+      <option name="SHOW_COMMAND_LINE" value="false" />
+      <option name="EMULATE_TERMINAL" value="false" />
+      <option name="MODULE_MODE" value="false" />
+      <option name="REDIRECT_INPUT" value="false" />
+      <option name="INPUT_FILE" value="" />
+      <method v="2" />
+    </configuration>
+    <configuration name="onnx_vertify_multi_outputs" type="PythonConfigurationType" factoryName="Python" temporary="true" nameIsGenerated="true">
+      <module name="pytorch_script" />
+      <option name="INTERPRETER_OPTIONS" value="" />
+      <option name="PARENT_ENVS" value="true" />
+      <envs>
+        <env name="PYTHONUNBUFFERED" value="1" />
+      </envs>
+      <option name="SDK_HOME" value="" />
+      <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$/utils_frequent/export" />
+      <option name="IS_MODULE_SDK" value="true" />
+      <option name="ADD_CONTENT_ROOTS" value="true" />
+      <option name="ADD_SOURCE_ROOTS" value="true" />
+      <option name="SCRIPT_NAME" value="$PROJECT_DIR$/utils_frequent/export/onnx_vertify_multi_outputs.py" />
+      <option name="PARAMETERS" value="" />
+      <option name="SHOW_COMMAND_LINE" value="false" />
+      <option name="EMULATE_TERMINAL" value="false" />
+      <option name="MODULE_MODE" value="false" />
+      <option name="REDIRECT_INPUT" value="false" />
+      <option name="INPUT_FILE" value="" />
+      <method v="2" />
+    </configuration>
+    <configuration name="pytorch_to_onnx" type="PythonConfigurationType" factoryName="Python" temporary="true" nameIsGenerated="true">
+      <module name="pytorch_script" />
+      <option name="INTERPRETER_OPTIONS" value="" />
+      <option name="PARENT_ENVS" value="true" />
+      <envs>
+        <env name="PYTHONUNBUFFERED" value="1" />
+      </envs>
+      <option name="SDK_HOME" value="" />
+      <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$/utils_frequent/export" />
+      <option name="IS_MODULE_SDK" value="true" />
+      <option name="ADD_CONTENT_ROOTS" value="true" />
+      <option name="ADD_SOURCE_ROOTS" value="true" />
+      <option name="SCRIPT_NAME" value="$PROJECT_DIR$/utils_frequent/export/pytorch_to_onnx.py" />
+      <option name="PARAMETERS" value="" />
+      <option name="SHOW_COMMAND_LINE" value="false" />
+      <option name="EMULATE_TERMINAL" value="false" />
+      <option name="MODULE_MODE" value="false" />
+      <option name="REDIRECT_INPUT" value="false" />
+      <option name="INPUT_FILE" value="" />
+      <method v="2" />
+    </configuration>
+    <configuration name="train" type="PythonConfigurationType" factoryName="Python" temporary="true" nameIsGenerated="true">
+      <module name="pytorch_script" />
+      <option name="INTERPRETER_OPTIONS" value="" />
+      <option name="PARENT_ENVS" value="true" />
+      <envs>
+        <env name="PYTHONUNBUFFERED" value="1" />
+      </envs>
+      <option name="SDK_HOME" value="" />
+      <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$/projects/nano_det" />
+      <option name="IS_MODULE_SDK" value="true" />
+      <option name="ADD_CONTENT_ROOTS" value="true" />
+      <option name="ADD_SOURCE_ROOTS" value="true" />
+      <option name="SCRIPT_NAME" value="$PROJECT_DIR$/projects/nano_det/train.py" />
+      <option name="PARAMETERS" value="" />
+      <option name="SHOW_COMMAND_LINE" value="false" />
+      <option name="EMULATE_TERMINAL" value="false" />
+      <option name="MODULE_MODE" value="false" />
+      <option name="REDIRECT_INPUT" value="false" />
+      <option name="INPUT_FILE" value="" />
+      <method v="2" />
+    </configuration>
+    <recent_temporary>
+      <list>
+        <item itemvalue="Python.a" />
+        <item itemvalue="Python.onnx_vertify" />
+        <item itemvalue="Python.onnx_vertify_multi_outputs" />
+        <item itemvalue="Python.train" />
+        <item itemvalue="Python.pytorch_to_onnx" />
+      </list>
+    </recent_temporary>
+  </component>
+  <component name="SpellCheckerSettings" RuntimeDictionaries="0" Folders="0" CustomDictionaries="0" DefaultDictionary="application-level" UseSingleDictionary="true" transferred="true" />
+  <component name="TaskManager">
+    <task active="true" id="Default" summary="Default task">
+      <changelist id="d0657714-3e69-4174-9c18-1c2a489fd7cd" name="Default Changelist" comment="" />
+      <created>1608818362758</created>
+      <option name="number" value="Default" />
+      <option name="presentableId" value="Default" />
+      <updated>1608818362758</updated>
+    </task>
+    <servers />
+  </component>
+  <component name="WindowStateProjectService">
+    <state x="364" y="472" width="841" height="524" key="#xdebugger.evaluate" timestamp="1609937236471">
+      <screen x="67" y="27" width="1853" height="1053" />
+    </state>
+    <state x="364" y="472" width="841" height="524" key="#xdebugger.evaluate/67.27.1853.1053@67.27.1853.1053" timestamp="1609937236471" />
+    <state x="717" y="310" key="FileChooserDialogImpl" timestamp="1610581731180">
+      <screen x="67" y="27" width="1853" height="1053" />
+    </state>
+    <state x="717" y="310" key="FileChooserDialogImpl/67.27.1853.1053@67.27.1853.1053" timestamp="1610581731180" />
+    <state width="1827" height="278" key="GridCell.Tab.0.bottom" timestamp="1611459161106">
+      <screen x="67" y="27" width="1853" height="1053" />
+    </state>
+    <state width="1827" height="278" key="GridCell.Tab.0.bottom/67.27.1853.1053@67.27.1853.1053" timestamp="1611459161106" />
+    <state width="1827" height="278" key="GridCell.Tab.0.center" timestamp="1611459161105">
+      <screen x="67" y="27" width="1853" height="1053" />
+    </state>
+    <state width="1827" height="278" key="GridCell.Tab.0.center/67.27.1853.1053@67.27.1853.1053" timestamp="1611459161105" />
+    <state width="1827" height="278" key="GridCell.Tab.0.left" timestamp="1611459161105">
+      <screen x="67" y="27" width="1853" height="1053" />
+    </state>
+    <state width="1827" height="278" key="GridCell.Tab.0.left/67.27.1853.1053@67.27.1853.1053" timestamp="1611459161105" />
+    <state width="1827" height="278" key="GridCell.Tab.0.right" timestamp="1611459161106">
+      <screen x="67" y="27" width="1853" height="1053" />
+    </state>
+    <state width="1827" height="278" key="GridCell.Tab.0.right/67.27.1853.1053@67.27.1853.1053" timestamp="1611459161106" />
+    <state width="1827" height="301" key="GridCell.Tab.1.bottom" timestamp="1611459161100">
+      <screen x="67" y="27" width="1853" height="1053" />
+    </state>
+    <state width="1827" height="301" key="GridCell.Tab.1.bottom/67.27.1853.1053@67.27.1853.1053" timestamp="1611459161100" />
+    <state width="1827" height="301" key="GridCell.Tab.1.center" timestamp="1611459161100">
+      <screen x="67" y="27" width="1853" height="1053" />
+    </state>
+    <state width="1827" height="301" key="GridCell.Tab.1.center/67.27.1853.1053@67.27.1853.1053" timestamp="1611459161100" />
+    <state width="1827" height="301" key="GridCell.Tab.1.left" timestamp="1611459161100">
+      <screen x="67" y="27" width="1853" height="1053" />
+    </state>
+    <state width="1827" height="301" key="GridCell.Tab.1.left/67.27.1853.1053@67.27.1853.1053" timestamp="1611459161100" />
+    <state width="1827" height="301" key="GridCell.Tab.1.right" timestamp="1611459161100">
+      <screen x="67" y="27" width="1853" height="1053" />
+    </state>
+    <state width="1827" height="301" key="GridCell.Tab.1.right/67.27.1853.1053@67.27.1853.1053" timestamp="1611459161100" />
+    <state x="576" y="298" width="824" height="508" key="IDE.errors.dialog" timestamp="1608818480361">
+      <screen x="67" y="27" width="1853" height="1053" />
+    </state>
+    <state x="576" y="298" width="824" height="508" key="IDE.errors.dialog/67.27.1853.1053@67.27.1853.1053" timestamp="1608818480361" />
+    <state x="709" y="191" width="559" height="723" key="RollbackChangesDialog" timestamp="1609332679082">
+      <screen x="67" y="27" width="1853" height="1053" />
+    </state>
+    <state x="709" y="191" width="559" height="723" key="RollbackChangesDialog/67.27.1853.1053@67.27.1853.1053" timestamp="1609332679082" />
+    <state x="512" y="187" key="SettingsEditor" timestamp="1610187063376">
+      <screen x="67" y="27" width="1853" height="1053" />
+    </state>
+    <state x="512" y="187" key="SettingsEditor/67.27.1853.1053@67.27.1853.1053" timestamp="1610187063376" />
+    <state width="1105" height="527" key="XDebugger.FullValuePopup" timestamp="1610175205459">
+      <screen x="67" y="27" width="1853" height="1053" />
+    </state>
+    <state width="1105" height="527" key="XDebugger.FullValuePopup/67.27.1853.1053@67.27.1853.1053" timestamp="1610175205459" />
+  </component>
+  <component name="XDebuggerManager">
+    <breakpoint-manager>
+      <breakpoints>
+        <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
+          <url>file://$PROJECT_DIR$/../script_torch/utils_frequent/anchor/predBox_and_imageBox.py</url>
+          <line>85</line>
+          <option name="timeStamp" value="27" />
+        </line-breakpoint>
+        <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
+          <url>file://$PROJECT_DIR$/../script_torch/utils_frequent/anchor/anchorbox_generate.py</url>
+          <line>64</line>
+          <option name="timeStamp" value="38" />
+        </line-breakpoint>
+        <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
+          <url>file://$PROJECT_DIR$/../script_torch/projects/nano_det/a.py</url>
+          <line>98</line>
+          <option name="timeStamp" value="117" />
+        </line-breakpoint>
+        <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
+          <url>file://$PROJECT_DIR$/../script_torch/projects/nano_det/a.py</url>
+          <line>83</line>
+          <option name="timeStamp" value="161" />
+        </line-breakpoint>
+        <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
+          <url>file://$PROJECT_DIR$/../script_torch/utils_frequent/nms.py</url>
+          <line>97</line>
+          <option name="timeStamp" value="169" />
+        </line-breakpoint>
+        <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
+          <url>file://$PROJECT_DIR$/../script_torch/utils_frequent/nms.py</url>
+          <line>115</line>
+          <option name="timeStamp" value="170" />
+        </line-breakpoint>
+        <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
+          <url>file://$PROJECT_DIR$/../script_torch/projects/nano_det/train.py</url>
+          <line>192</line>
+          <option name="timeStamp" value="180" />
+        </line-breakpoint>
+        <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
+          <url>file://$PROJECT_DIR$/../script_torch/utils_frequent/dataload/dataloader_detection.py</url>
+          <line>110</line>
+          <option name="timeStamp" value="184" />
+        </line-breakpoint>
+        <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
+          <url>file://$PROJECT_DIR$/../script_torch/projects/nano_det/train.py</url>
+          <line>423</line>
+          <option name="timeStamp" value="190" />
+        </line-breakpoint>
+        <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
+          <url>file://$PROJECT_DIR$/../script_torch/projects/nano_det/train.py</url>
+          <line>381</line>
+          <option name="timeStamp" value="192" />
+        </line-breakpoint>
+        <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
+          <url>file://$PROJECT_DIR$/../script_torch/projects/nano_det/train.py</url>
+          <line>372</line>
+          <option name="timeStamp" value="195" />
+        </line-breakpoint>
+        <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
+          <url>file://$PROJECT_DIR$/../script_torch/projects/nano_det/train.py</url>
+          <line>263</line>
+          <option name="timeStamp" value="196" />
+        </line-breakpoint>
+        <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
+          <url>file://$PROJECT_DIR$/../script_torch/utils_frequent/export/onnx_vertify.py</url>
+          <line>28</line>
+          <option name="timeStamp" value="198" />
+        </line-breakpoint>
+        <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
+          <url>file://$PROJECT_DIR$/../script_torch/utils_frequent/export/onnx_vertify_multi_outputs.py</url>
+          <line>24</line>
+          <option name="timeStamp" value="199" />
+        </line-breakpoint>
+        <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
+          <url>file://$PROJECT_DIR$/../script_torch/projects/nano_det/utils/bbox_distribution.py</url>
+          <line>12</line>
+          <option name="timeStamp" value="201" />
+        </line-breakpoint>
+      </breakpoints>
+    </breakpoint-manager>
+  </component>
+</project>

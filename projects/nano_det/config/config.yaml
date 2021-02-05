@@ -1,0 +1,18 @@
+dir:
+  trainImgDir: '/media/q/deep/me/data/m2nist/format_orgin/images/'
+  trainAnnoDir: '/media/q/deep/me/data/m2nist/format_me/train_annotation/'
+  modelSaveDir: './saved_model/'
+  modelReloadPath :
+augment:
+  flag: False
+model:
+  netInput: (480, 320)
+  featSizes: [[60,40],[30,20],[15,10]]
+  strides : [8,16,32]
+  classNum: 10
+  bboxPredNum: 8
+train:
+  batchSize: 32
+  epoch: 300
+
+

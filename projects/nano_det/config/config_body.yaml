@@ -1,0 +1,25 @@
+dir:
+  trainImgDir: '/media/q/deep/me/data/2hand/oxford hand dataset/hand_dataset/training_dataset/training_data/images/'
+  trainAnnoDir: '/media/q/deep/me/data/2hand/oxford hand dataset/hand_dataset/training_dataset/training_data/annotations/'
+  modelSaveDir: './saved_model/'
+  modelReloadPath :
+augment:
+  flag: False
+model:
+  #netInput: (480, 320)
+  #featSizes: [[60,40],[30,20],[15,10]] #480, 320
+  netInput: (640, 960)
+  featSizes: [[80,120],[40,60],[20,30]]
+  strides : [8,16,32]
+  classNum: 1
+  bboxPredNum: 8
+train:
+  workers: 8
+  batchSize: 16
+  epoch: 300
+  lr0: 0.03
+  giouloss: 24
+  dfloss: 24
+  qfloss: 1
+
+

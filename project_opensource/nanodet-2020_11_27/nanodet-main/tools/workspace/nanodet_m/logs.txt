@@ -1,0 +1,3 @@
+INFO:root:Using Tensorboard, logs will be saved in workspace/nanodet_m/logs
+INFO:root:Set random seed to 7
+INFO:root:Creating model...
