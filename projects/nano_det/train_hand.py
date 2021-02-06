@@ -2,7 +2,7 @@ import torch
 import cv2
 import numpy as np
 
-from data.dataloader_detection_body import ListDataset
+from data.dataloader_detection_hand import ListDataset
 from net.net import NanoNet
 from data.collate_function import collate_function
 from anchor.anchorbox_generate import AnchorGenerator
@@ -51,7 +51,7 @@ for i in range(headerNum):
 
 for e in range(1, 1+ cfg.train.epoch):
     for id, infos in enumerate(trainLoader):
-        lr = (cfg.train.lr0/(pow(3, e // 20)))
+        lr = (cfg.train.lr0/(pow(3, e // 7)))
         for param_group in optimizer.param_groups:
             param_group['lr'] = lr
 
@@ -194,7 +194,7 @@ for e in range(1, 1+ cfg.train.epoch):
                 " dfloss:",dflossp.to('cpu').numpy(),
                 " qfloss:",qflossp .to('cpu').numpy())
 
-    if e %5 == 0:
+    if e % 5 == 0:
         """参数"""
         savePath =cfg.dir.modelSaveDir+str(e)+'.pth'
         torch.save(network.state_dict(), savePath)#save

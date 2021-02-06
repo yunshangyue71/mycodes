@@ -63,7 +63,7 @@ class ImgAugWithShape(object):
     def rotation(self, degree, prob = 0.5):
         R = np.eye(3)
         if random.random() < prob:
-            a = random.uniform(degree, degree)
+            a = random.uniform(-degree, degree)
             R[:2] = cv2.getRotationMatrix2D(angle=a, center=(0, 0), scale=1)
 
         M = R @ self.C

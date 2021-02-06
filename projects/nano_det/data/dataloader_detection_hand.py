@@ -5,18 +5,17 @@ from torch.utils.data import Dataset
 import cv2
 from data.imgaug_wo_shape import ImgAugWithoutShape
 from data.imgaug_w_shape import ImgAugWithShape
-from utils.resize_uniform import resizeUniform
+
 """
 一个image一个anno.txt
 imageName.txt 
-    xmin, ymin, x2,y2, cls0,cls1  wider person
+    xmin, ymin, w,h, cls0,cls1
     xmin, ymin, w,h, cls0,cls1
     xmin, ymin, w,h, cls0,cls1
 这几个参数都是根目录
 output
     img 0-1
 
-背景：-1
 """
 
 
@@ -36,21 +35,17 @@ class ListDataset(Dataset):
     def __getitem__(self, index):
         """bbox"""
         txtPath = self.trainAnnoPath + self.annNames[index]
-        infos = np.loadtxt(txtPath, skiprows=1)
+        infos = np.loadtxt(txtPath)
         infos = np.array(infos, dtype=np.float32).reshape(-1, 5)
-
-        bboxes = infos[:, 1:]  # .reshape(-1, 5)
-        bboxes[:, 2:] -= bboxes[:, :2]
-        classes = np.array(infos[:, 0] > 2 , dtype= np.float)
-
-        #print(classes.shape)
+        bboxes = infos[:, :4]
+        classes = infos[:, 4:]
 
         """img """
-        img = cv2.imread(self.trainImgPath + self.annNames[index].split('.')[0] + '.jpg' , cv2.COLOR_BGR2RGB)
+        img = cv2.imread(self.trainImgPath + self.annNames[index].split('.')[0] + '.jpg')  # , cv2.COLOR_BGR2RGB)
         img = img.astype(np.float32) / 255
 
         """aug"""
-        if self.augFlag:
+        if self.augFlag and 0:
             """aug images"""
             imgAug = np.copy(img)
             imgAug = self.imgAuger(imgAug)  # 这里都是0-1的增强， 所以要注意
@@ -73,28 +68,23 @@ class ListDataset(Dataset):
             bboxesAug = np.copy(bboxes)
 
         """resize to input size"""
-        #imgAug = cv2.resize(imgAug, self.netInputSizehw[::-1])
-        imgAug, effectArea, realh, realw = resizeUniform(imgAug, self.netInputSizehw)
-
-        hsRate = realh / img.shape[0]
-        wsRate = realw / img.shape[1]
+        imgAug = cv2.resize(imgAug, self.netInputSizehw[::-1])
+        hsRate = self.netInputSizehw[0] / img.shape[0]
+        wsRate = self.netInputSizehw[1] / img.shape[1]
         bboxesAug[:, 0:4:2] *= wsRate
-        bboxesAug[:, 0] += effectArea['x']
         bboxesAug[:, 1:4:2] *= hsRate
-        bboxesAug[:, 1] += effectArea['y']
 
         """return"""
         imgout = imgAug.transpose(2, 0, 1)  # 因为pytorch的格式是CHW
         meta = dict(images=torch.from_numpy(imgout.astype(np.float32)),
                     bboxesGt=bboxesAug,
-                    classes=classes,
-                    imgname = self.annNames[index].split('.')[0] + '.jpg')
+                    classes=classes)
 
         '''show'''
-        showFlag = 1
+        showFlag = 0
         if showFlag:
             """需要设置的"""
-            imgOutSize = (60, 40)  # 特征图最后的输出大小
+            imgOutSize = (360, 240)  # 特征图最后的输出大小
 
             """END"""
             color = (0, 0, 255)
@@ -113,7 +103,7 @@ class ListDataset(Dataset):
                               color, thick)
             cv2.imshow(self.annNames[index] + '_aug', imgAug)
 
-            imgOut = cv2.resize(imgAug, imgOutSize)
+            imgOut = cv2.resize(imgAug, imgOutSize[::-1])
             hsRate2 = imgOutSize[0] / imgAug.shape[0]
             wsRate2 = imgOutSize[1] / imgAug.shape[1]
             bboxesOut = np.copy(bboxesAug)
@@ -124,7 +114,6 @@ class ListDataset(Dataset):
                               tuple((int(bboxesOut[i][0]) + int(bboxesOut[i][2]),
                                      int(bboxesOut[i][1]) + int(bboxesOut[i][3]))),
                               color, thick)
-                print(classes[i])
             cv2.imshow(self.annNames[index] + '_out', imgOut)
             cv2.waitKey()
             cv2.destroyAllWindows()
@@ -146,15 +135,15 @@ class ListDataset(Dataset):
         aug = ImgAugWithoutShape(img)
         aug.brightness(delta=0.2, prob=0.5)
         aug.constrast(alphaLow=0.8, alphaUp=1.2, prob=0.5)
-        aug.constrast(alphaLow=0.8, alphaUp=1.2, prob=0.5)
+        aug.saturation(alphaLow=0.8, alphaUp=1.2, prob=0.5)
         return aug.img
 
     def imgBoxAuger(self, img, boxes):
         aug = ImgAugWithShape(img, boxes)
         aug.scale(ratio=(0.8, 1.2), prob=0.5)
         aug.shear(3, prob=0.5)
-        aug.stretch(width_ratio=(1, 1), height_ratio=(1, 1), prob=0)
-        aug.rotation(degree=20, prob=1)
+        aug.stretch(width_ratio=(1, 1), height_ratio=(1, 1), prob=0.5)
+        aug.rotation(degree=20, prob=0.5)
 
         return aug.img, aug.boxes
 
