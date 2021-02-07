@@ -1,6 +1,6 @@
 import torch
 from torch import nn
-
+from net.init_net import xavier_init
 from net.basic_cnn import DWConvBnReluPool
 """
 DW-DW-PW
@@ -27,7 +27,10 @@ class Head(nn.Module):
                          self.clsOutChannels + 4 * (self.reg_max),
                         1)
         self.head.append(conv)
-
+    def init_weight(self):
+        for conv in self.modules():
+            if isinstance(conv, nn.Conv2d):
+                xavier_init(conv, distribution='uniform')
     def forward(self, x):
         for conv in self.head:
             x = conv(x)

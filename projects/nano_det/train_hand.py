@@ -14,7 +14,7 @@ from loss.distribution_focal_loss import DistributionFocalLoss
 from loss.quality_focal_loss import QualityFocalLoss
 from loss.multi_iou_cal import MultiIoUCal
 from config.config import load_config, cfg
-
+from loss.L1L2loss import Regularization
 """config"""
 load_config(cfg, "./config/config_hand.yaml")
 print(cfg)
@@ -23,7 +23,7 @@ device = torch.device('cuda:0')
 
 """dataset"""
 trainData = ListDataset(trainAnnoPath =cfg.dir.trainAnnoDir,  trainImgPath = cfg.dir.trainImgDir,
-                        netInputSizehw = cfg.model.netInput,  augFlag=0)
+                        netInputSizehw = cfg.model.netInput,  augFlag=cfg.augment.flag)
 trainLoader = torch.utils.data.DataLoader(
     trainData,
     collate_fn=collate_function,
@@ -50,11 +50,16 @@ for i in range(headerNum):
 
 
 for e in range(1, 1+ cfg.train.epoch):
-    for id, infos in enumerate(trainLoader):
-        lr = (cfg.train.lr0/(pow(3, e // 7)))
-        for param_group in optimizer.param_groups:
-            param_group['lr'] = lr
+    """warmup"""
+    if e <= cfg.train.warmupEpoch:
+        lr = cfg.train.warmupLr0 + cfg.train.lr0 * (e-1) / cfg.train.warmupEpoch
+    else:
+        lr = (cfg.train.lr0 / (pow(3, (e - cfg.train.warmupEpoch) // 7)))
+    for param_group in optimizer.param_groups:
+        param_group['lr'] = lr
+    """END"""
 
+    for id, infos in enumerate(trainLoader):
         """forward and pred"""
         imgs = infos['images']
         bboxesGt = infos['bboxesGt']
@@ -74,10 +79,10 @@ for e in range(1, 1+ cfg.train.epoch):
             anchorBoxes_ = [i.reshape(-1, 4) for i in anchorBoxes]
             anchorBoxes_ = torch.cat(anchorBoxes_, dim=0)
             assign = Assigner(3, anchorBoxes_, bboxesGtImg, classesGtImg)
-            infos = assign.master()
+            assignInfos = assign.master()
 
-            anchorBoxGt.append(infos['anchorBoxGt'])
-            anchorBoxGtClass.append(infos['anchorBoxGtClass'])
+            anchorBoxGt.append(assignInfos['anchorBoxGt'])
+            anchorBoxGtClass.append(assignInfos['anchorBoxGtClass'])
         anchorBoxGt_ = torch.stack(anchorBoxGt, 0)
         anchorBoxGtClass_ = torch.stack(anchorBoxGtClass, 0)
         anchorBoxGt = []
@@ -118,6 +123,7 @@ for e in range(1, 1+ cfg.train.epoch):
                             cv2.circle(imageID, (int(j%featw)*cfg.model.strides[levelId] + int(cfg.model.strides[levelId]/2),
                                                int(j//featw)*cfg.model.strides[levelId] + int(cfg.model.strides[levelId]/2)),
                                        2, (0, 0, 255), -1)
+                            cv2.putText(imageID, str(clsi[j]), (int(boxi[j][0]),int(boxi[j][1])), 1, 1, (0,255,0))
                     cv2.imshow('img'+str(levelId), imageID)
                     cv2.waitKey()
             print("show anghor box gt")
@@ -171,7 +177,7 @@ for e in range(1, 1+ cfg.train.epoch):
             loss.append([giouLossLevel.sum(),len(posindex)])
             loss.append([dfLossLevel.sum(), len(posindex)])
             loss.append([qfLossLevel.sum(), feath*featw])
-
+        l1, l2 = Regularization(network)
         optimizer.zero_grad()
         giouloss = (loss[0][0] + loss[3][0] + loss[6][0]) / (loss[0][1] + loss[3][1] + loss[6][1])
         dfloss =   (loss[1][0] + loss[4][0] + loss[7][0]) / (loss[1][1] + loss[4][1] + loss[7][1])
@@ -179,7 +185,8 @@ for e in range(1, 1+ cfg.train.epoch):
 
         loss_ = cfg.train.giouloss * giouloss + \
                 cfg.train.dfloss * dfloss + \
-                cfg.train.qfloss * qfloss
+                cfg.train.qfloss * qfloss + \
+                cfg.train.l2 * l2
         loss_.backward()
         optimizer.step()
 

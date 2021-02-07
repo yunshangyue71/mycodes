@@ -5,6 +5,7 @@ from torch.utils.data import Dataset
 import cv2
 from data.imgaug_wo_shape import ImgAugWithoutShape
 from data.imgaug_w_shape import ImgAugWithShape
+from utils.resize_uniform import resizeUniform
 
 """
 一个image一个anno.txt
@@ -29,7 +30,7 @@ class ListDataset(Dataset):
         self.trainAnnoPath = trainAnnoPath
         self.trainImgPath = trainImgPath
         self.netInputSizehw = tuple(netInputSizehw)
-        self.annNames = os.listdir(self.trainAnnoPath)
+        self.annNames = os.listdir(self.trainAnnoPath)[:16]
         self.augFlag = augFlag
 
     def __getitem__(self, index):
@@ -45,7 +46,7 @@ class ListDataset(Dataset):
         img = img.astype(np.float32) / 255
 
         """aug"""
-        if self.augFlag and 0:
+        if self.augFlag:
             """aug images"""
             imgAug = np.copy(img)
             imgAug = self.imgAuger(imgAug)  # 这里都是0-1的增强， 所以要注意
@@ -68,11 +69,13 @@ class ListDataset(Dataset):
             bboxesAug = np.copy(bboxes)
 
         """resize to input size"""
-        imgAug = cv2.resize(imgAug, self.netInputSizehw[::-1])
-        hsRate = self.netInputSizehw[0] / img.shape[0]
-        wsRate = self.netInputSizehw[1] / img.shape[1]
+        imgAug, effectArea, realh, realw = resizeUniform(imgAug, self.netInputSizehw)
+        hsRate = realh / img.shape[0]
+        wsRate = realw / img.shape[1]
         bboxesAug[:, 0:4:2] *= wsRate
+        bboxesAug[:, 0] += effectArea['x']
         bboxesAug[:, 1:4:2] *= hsRate
+        bboxesAug[:, 1] += effectArea['y']
 
         """return"""
         imgout = imgAug.transpose(2, 0, 1)  # 因为pytorch的格式是CHW
@@ -84,7 +87,7 @@ class ListDataset(Dataset):
         showFlag = 0
         if showFlag:
             """需要设置的"""
-            imgOutSize = (360, 240)  # 特征图最后的输出大小
+            imgOutSize = (20, 20)  # 特征图最后的输出大小
 
             """END"""
             color = (0, 0, 255)

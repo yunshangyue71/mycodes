@@ -1,8 +1,8 @@
 dir:
-  trainImgDir: '/media/q/data/datasets/2hand/egohands/myformat/images/'
-  trainAnnoDir: '/media/q/data/datasets/2hand/egohands/myformat/annotations/detection_clean/'
-  #trainImgDir: '/media/q/deep/me/data/0digit/m2nist/format_orgin/images/'
-  #trainAnnoDir: '/media/q/deep/me/data/0digit/m2nist/format_me/train_annotation/'
+  #trainImgDir: '/media/q/data/datasets/2hand/egohands/myformat/images/'
+  #trainAnnoDir: '/media/q/data/datasets/2hand/egohands/myformat/annotations/detection_clean/'
+  trainImgDir: '/media/q/deep/me/data/0digit/m2nist/format_orgin/images/'
+  trainAnnoDir: '/media/q/deep/me/data/0digit/m2nist/format_me/train_annotation/'
   valAnnoDir: '/media/q/deep/me/data/0digit/m2nist/format_me/val_annotation/'
   modelSaveDir: '/media/q/deep/me/model/nanodet/'
   modelReloadPath :
@@ -24,9 +24,11 @@ train:
   workers: 8
   batchSize: 16
   epoch: 300
-  lr0: 0.03
   giouloss: 24
   dfloss: 24
   qfloss: 1
-
+  l2: 0.0005
+  lr0: 0.03
+  warmupLr0: 0.00001
+  warmupEpoch: 10
 

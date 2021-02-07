@@ -24,6 +24,7 @@ class NanoNet(nn.Module):
             h = Head(reg_max = 8,  # defalut =8个bbox,用于分布, general focal loss format
                     inChannels = 96, #
                     clsOutChannels = self.clsNum)
+
             self.head.append(h)
 
     def forward(self, x):

@@ -40,7 +40,7 @@ trainLoader = torch.utils.data.DataLoader(
 network = NanoNet(classNum=classNum)
 network.to(device)
 
-savePath =cfg.dir.modelSaveDir + '200.pth'
+savePath =cfg.dir.modelSaveDir + '70.pth'
 weights = torch.load(savePath)#加载参数
 network.load_state_dict(weights)#给自己的模型加载参数
 with torch.no_grad():
@@ -92,7 +92,7 @@ with torch.no_grad():
                 det_labels = det_labels.to('cpu').numpy()
 
                 for j in range(det_bboxes.shape[0]):
-                    if det_bboxes[j][-1]> 0.25:
+                    if det_bboxes[j][-1]> 0.2:
                         box = det_bboxes[j]
                         cls = det_labels[j]
                         cv2.rectangle(image, (max(0, box[0]), max(0, box[1])), (max(0, box[2]), max(0, box[3])), (0,255,0))
@@ -101,7 +101,7 @@ with torch.no_grad():
                         print(cls)
                 imsavePath = '/media/q/deep/me/model/pytorch_predict_' + str(id) + '.jpg'
                 # print(imsavePath)
-                cv2.imwrite(imsavePath, image)
+                #cv2.imwrite(imsavePath, image)
                 cv2.imshow('img', image)
 
                 cv2.waitKey()
