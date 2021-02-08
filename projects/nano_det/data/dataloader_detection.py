@@ -5,7 +5,7 @@ from torch.utils.data import Dataset
 import cv2
 from data.imgaug_wo_shape import ImgAugWithoutShape
 from data.imgaug_w_shape import ImgAugWithShape
-
+from utils.resize_uniform import resizeUniform
 """
 一个image一个anno.txt
 imageName.txt 
@@ -15,114 +15,80 @@ imageName.txt
 这几个参数都是根目录
 output
     img 0-1
-
 """
-
-
 class ListDataset(Dataset):
     def __init__(self,
                  trainAnnoPath,  # txt files root /
                  trainImgPath,  # images root /
                  netInputSizehw=(320, 320),
                  augFlag=False,
+                 normalize = None
                  ):
         self.trainAnnoPath = trainAnnoPath
         self.trainImgPath = trainImgPath
         self.netInputSizehw = tuple(netInputSizehw)
-        self.annNames = os.listdir(self.trainAnnoPath)
+        self.annNames = os.listdir(self.trainAnnoPath)#[:16]
+        self.normalize = np.array(normalize)
         self.augFlag = augFlag
+        self.showFlag = 1
 
     def __getitem__(self, index):
-        """bbox"""
+        """bbox img org"""
         txtPath = self.trainAnnoPath + self.annNames[index]
         infos = np.loadtxt(txtPath)
-        infos = np.array(infos, dtype=np.float32)
-        bboxes = infos[:, :4]  # .reshape(-1, 5)
+        infos = np.array(infos, dtype=np.float32).reshape(-1, 5)
+
+        bboxes = infos[:, :4]
         classes = infos[:, 4:]
-
-        """img """
         img = cv2.imread(self.trainImgPath + self.annNames[index].split('.')[0] + '.jpg')  # , cv2.COLOR_BGR2RGB)
-        img = img.astype(np.float32) / 255
+        img = img.astype(np.float32)
 
-        """aug"""
-        if self.augFlag and 0:
-            """aug images"""
-            imgAug = np.copy(img)
-            imgAug = self.imgAuger(imgAug)  # 这里都是0-1的增强， 所以要注意
-            imgAug = np.clip(imgAug, 0, 1)
-            '''END'''
+        if self.showFlag: self.__show(np.copy(img).astype(np.uint8), bboxes, classes, self.annNames[index], color = (0, 0, 255))
 
-            """aug images and boxes"""
-            bboxesAug_ = np.copy(bboxes)
-            # (x1,y1, w,h)->(x1,y1, x2,y2)
-            bboxesAug_[:, 2:] = bboxesAug_[:, :2] + bboxesAug_[:, 2:]
-            imgAug, bboxesAug = self.imgBoxAuger(imgAug, bboxesAug_)
+        """unifor resize 放在最后，输入网络的图片会有很多的0， 经过imgaug这些将会变为非0有利于学习"""
+        imgOrgShape = img.shape
+        img, effectArea, realh, realw = resizeUniform(img, self.netInputSizehw)
 
-            # (x1,y1, x2,y2)->(x1,y1, w,h)
-            bboxesAug[:, 2:] = bboxesAug[:, 2:] - bboxesAug[:, :2]
-            # bboxes[:, 2:] = bboxes[:, 2:] - bboxes[:, :2]
-            """END"""
-        else:
-            # print('aa')
-            imgAug = np.copy(img)
-            bboxesAug = np.copy(bboxes)
+        hsRate = realh / imgOrgShape[0]
+        wsRate = realw / imgOrgShape[1]
+        bboxes[:, 0:4:2] *= wsRate
+        bboxes[:, 0] += effectArea['x']
+        bboxes[:, 1:4:2] *= hsRate
+        bboxes[:, 1] += effectArea['y']
 
-        """resize to input size"""
-        imgAug = cv2.resize(imgAug, self.netInputSizehw[::-1])
-        hsRate = self.netInputSizehw[0] / img.shape[0]
-        wsRate = self.netInputSizehw[1] / img.shape[1]
-        bboxesAug[:, 0:4:2] *= wsRate
-        bboxesAug[:, 1:4:2] *= hsRate
+        if self.showFlag: self.__show(np.copy(img).astype(np.uint8), bboxes, classes, self.annNames[index]+"_resize", color=(0, 0, 255))
 
-        """return"""
-        imgout = imgAug.transpose(2, 0, 1)  # 因为pytorch的格式是CHW
-        meta = dict(images=torch.from_numpy(imgout.astype(np.float32)),
-                    bboxesGt=bboxesAug,
-                    classes=classes)
+        if self.augFlag :
+            """Img Aug With Shape, 放射变换的增强一定要放在前面，主要是0的情况"""
+            bboxes[:, 2:] = bboxes[:, :2] + bboxes[:, 2:] # (x1,y1, w,h)->(x1,y1, x2,y2)
+            imgauger = ImgAugWithShape(img, bboxes)
+            imgauger.shear(15)
+            imgauger.translate(translate=[-0.2, 0.2])
+            img, bboxes = (imgauger.img, imgauger.boxes)
 
-        '''show'''
-        showFlag = 0
-        if showFlag:
-            """需要设置的"""
-            imgOutSize = (360, 240)  # 特征图最后的输出大小
+            bboxes[:, 2:] = bboxes[:, 2:] - bboxes[:, :2]  # (x1,y1, x2,y2)->(x1,y1, w,h)
 
-            """END"""
-            color = (0, 0, 255)
-            thick = 1
-            for i in range(bboxes.shape[0]):
-                cv2.rectangle(img, tuple((int(bboxes[i][0]), int(bboxes[i][1]))),
-                              tuple((int(bboxes[i][0]) + int(bboxes[i][2]),
-                                     int(bboxes[i][1]) + int(bboxes[i][3]))),
-                              color, thick)
-            cv2.imshow(self.annNames[index] + '_org', img)
+            """非放射变换，放在最后， 最后的img 不用clip到（0，1）之间"""
+            imgauger = ImgAugWithoutShape(img)
+            imgauger.brightness()
+            imgauger.constrast()
+            imgauger.saturation()
+            imgauger.normalize1(mean = self.normalize[0], std= self.normalize[1])
+            img = imgauger.img
 
-            for i in range(bboxesAug.shape[0]):
-                cv2.rectangle(imgAug, tuple((int(bboxesAug[i][0]), int(bboxesAug[i][1]))),
-                              tuple((int(bboxesAug[i][0]) + int(bboxesAug[i][2]),
-                                     int(bboxesAug[i][1]) + int(bboxesAug[i][3]))),
-                              color, thick)
-            cv2.imshow(self.annNames[index] + '_aug', imgAug)
+            if self.showFlag: self.__show(np.copy(img).astype(np.uint8), bboxes, classes, self.annNames[index] + "_aug", color=(0, 0, 255))
+            if self.showFlag: cv2.waitKey()
 
-            imgOut = cv2.resize(imgAug, imgOutSize[::-1])
-            hsRate2 = imgOutSize[0] / imgAug.shape[0]
-            wsRate2 = imgOutSize[1] / imgAug.shape[1]
-            bboxesOut = np.copy(bboxesAug)
-            bboxesOut[:, 0:4:2] *= wsRate2
-            bboxesOut[:, 1:4:2] *= hsRate2
-            for i in range(bboxes.shape[0]):
-                cv2.rectangle(imgOut, tuple((int(bboxesOut[i][0]), int(bboxesOut[i][1]))),
-                              tuple((int(bboxesOut[i][0]) + int(bboxesOut[i][2]),
-                                     int(bboxesOut[i][1]) + int(bboxesOut[i][3]))),
-                              color, thick)
-            cv2.imshow(self.annNames[index] + '_out', imgOut)
-            cv2.waitKey()
-            cv2.destroyAllWindows()
-
-        """如果每个img输出的形状一样， 那么就可以下面"""
-        # return torch.from_numpy(imgout.astype(np.float32)), \
+        """return 两种return可供选择"""
+        img = img.transpose(2, 0, 1)  # 因为pytorch的格式是CHW
+        meta = dict(images=torch.from_numpy(img.astype(np.float32)),
+                    bboxesGt=bboxes,
+                    classes=classes,
+                    annoName = self.annNames[index])
+        #"""如果每个img输出的形状一样， 那么就可以下面"""
+        # return torch.from_numpy(img.astype(np.float32)), \
         #        torch.from_numpy(bboxes.astype(np.float32)),\
         #        torch.from_numpy(classes.astype(np.float32))
-
         # 每张图片的bbox数目不一致，因此要使用这样使用, 在使用数目不一致的元素，就不能batch是使用，只能一个照片一张照片
         # torch.utils_less.data.DataLoader(trainData, collate_fn=collate_function,)这个需要collate_fn就需要制定一下了
         return meta
@@ -130,23 +96,15 @@ class ListDataset(Dataset):
     def __len__(self):
         return len(self.annNames)
 
-    #####
-    def imgAuger(self, img):
-        aug = ImgAugWithoutShape(img)
-        aug.brightness(delta=0.2, prob=0.5)
-        aug.constrast(alphaLow=0.8, alphaUp=1.2, prob=0.5)
-        aug.constrast(alphaLow=0.8, alphaUp=1.2, prob=0.5)
-        return aug.img
-
-    def imgBoxAuger(self, img, boxes):
-        aug = ImgAugWithShape(img, boxes)
-        aug.scale(ratio=(0.8, 1.2), prob=0.5)
-        aug.shear(3, prob=0.5)
-        aug.stretch(width_ratio=(1, 1), height_ratio=(1, 1), prob=0)
-        aug.rotation(degree=20, prob=1)
-
-        return aug.img, aug.boxes
-
-
+    def __show(self, img, bboxes,classes, winName, color):
+        assert bboxes.shape[0] == classes.shape[0], "bboxes number not equal classes number!"
+        for i in range(bboxes.shape[0]):
+            cv2.rectangle(img, tuple((int(bboxes[i][0]), int(bboxes[i][1]))),
+                          tuple((int(bboxes[i][0]) + int(bboxes[i][2]),
+                                 int(bboxes[i][1]) + int(bboxes[i][3]))),
+                          color, 1)
+        for j in range(classes.shape[0]):
+            cv2.putText(img, str(classes[j]), (int(bboxes[j][0]), int(bboxes[j][1])), 1, 1, color)
+        cv2.imshow(winName, img)
 if __name__ == '__main__':
     pass

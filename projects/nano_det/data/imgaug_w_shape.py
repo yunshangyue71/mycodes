@@ -7,11 +7,14 @@ M =
 [[a   b   c]
  [d   e   f]
  [g   h   i]]
+ 
 relate to center is (0, 0)
 ori img = 
 [[x],
  [y],
- [z]] 
+ [z=1]] 
+ x' = (x*a + y*b + c)/(x*g + y*h + i)
+ y' = (x*d + y*e + f)/(x*g + y*h + i)
 a,e,i make the xyz isolate larger
 b, make the x larger is the y is larger
 c           x               z
@@ -34,7 +37,7 @@ class ImgAugWithShape(object):
         self.C[0, 2] = - self.oriWidth / 2
         self.C[1, 2] = - self.oriHeight / 2
 
-        #matrix make p1 is (0, 0)
+        #matrix make p1(left) is (0, 0)
         self.T = np.eye(3)
         self.T[0, 2] = self.oriWidth / 2 # x translation
         self.T[1, 2] = self.oriHeight / 2 # y translation
@@ -84,7 +87,7 @@ class ImgAugWithShape(object):
         self.img = cv2.warpPerspective(self.img, M, dsize=None)
         self.boxes = self.warpBoxes(M)
 
-    # width, height scale different num
+    # width, height 缩放尺寸不同
     def stretch(self, width_ratio=(0.8, 1), height_ratio=(0.8, 1), prob=0.5):
         Str = np.eye(3)
         if random.random() < prob:
@@ -108,12 +111,12 @@ class ImgAugWithShape(object):
         self.img = cv2.warpPerspective(self.img, M, dsize=None)
         self.boxes = self.warpBoxes(M)
 
-    #up donw remove translate pixes, padding zero
+    #想右下角移动多少， 百分比
     def translate(self, translate=3, prob=0.5):
         T = np.eye(3)
         if random.random() < prob:
-            T[0, 2] = random.uniform(0.5 - translate, 0.5 + translate) * self.oriWidth  # x translation
-            T[1, 2] = random.uniform(0.5 - translate, 0.5 + translate) * self.oriHeight  # y translation
+            T[0, 2] = random.uniform(translate[0], translate[1]) * self.oriWidth  # x translation
+            T[1, 2] = random.uniform(translate[0], translate[1]) * self.oriHeight  # y translation
 
         M = T @ self.C
         M = self.T @ M

@@ -2,7 +2,7 @@ import torch
 import cv2
 import numpy as np
 
-from data.dataloader_detection_hand import ListDataset
+from data.dataloader_detection import ListDataset
 from net.net import NanoNet
 from data.collate_function import collate_function
 from anchor.anchorbox_generate import AnchorGenerator
@@ -23,7 +23,8 @@ device = torch.device('cuda:0')
 
 """dataset"""
 trainData = ListDataset(trainAnnoPath =cfg.dir.trainAnnoDir,  trainImgPath = cfg.dir.trainImgDir,
-                        netInputSizehw = cfg.model.netInput,  augFlag=cfg.augment.flag)
+                        netInputSizehw = cfg.model.netInput,  augFlag=cfg.data.augment,
+                        normalize = cfg.data.normalize)
 trainLoader = torch.utils.data.DataLoader(
     trainData,
     collate_fn=collate_function,

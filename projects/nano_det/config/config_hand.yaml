@@ -6,8 +6,11 @@ dir:
   valAnnoDir: '/media/q/deep/me/data/0digit/m2nist/format_me/val_annotation/'
   modelSaveDir: '/media/q/deep/me/model/nanodet/'
   modelReloadPath :
-augment:
+data:
+  augment: True
+  normalize: [[103.53, 116.28, 123.675], [57.375, 57.12, 58.395]]
   flag: True
+
 model:
   #netInput: (480, 320)
   #featSizes: [[60,40],[30,20],[15,10]] #480, 320
@@ -21,8 +24,8 @@ model:
   classNum: 10
   bboxPredNum: 8
 train:
-  workers: 8
-  batchSize: 16
+  workers: 0
+  batchSize: 1
   epoch: 300
   giouloss: 24
   dfloss: 24
