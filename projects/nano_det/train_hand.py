@@ -86,10 +86,11 @@ for e in range(1, 1+ cfg.train.epoch):
             anchorBoxGtClass.append(assignInfos['anchorBoxGtClass'])
         anchorBoxGt_ = torch.stack(anchorBoxGt, 0)
         anchorBoxGtClass_ = torch.stack(anchorBoxGtClass, 0)
+
         anchorBoxGt = []
         anchorBoxGtClass = []
         start = 0
-        end = cfg.model.featSizes[0][0]*cfg.model.featSizes[0][1]
+        end = cfg.model.featSizes[0][0] * cfg.model.featSizes[0][1]
         for level in range(headerNum):
             anchorBoxGt.append(anchorBoxGt_[:,start:end,:])
             anchorBoxGtClass.append(anchorBoxGtClass_[:,start:end])
@@ -99,16 +100,16 @@ for e in range(1, 1+ cfg.train.epoch):
             end += cfg.model.featSizes[level+1][0]*cfg.model.featSizes[level+1][1]
 
         """to show anchor assigned results"""
-        showFlag = 0
+        showFlag = 1
         if showFlag:
             for i in range(realBatchSize):
                 image = torch.clone(imgs[i])
                 image = image.to('cpu').numpy()
-                image = image.transpose(1, 2, 0)*255
+                image = image.transpose(1, 2, 0)#*255
                 image = image.astype(np.uint8)
                 image = cv2.UMat(image).get()
                 for levelId in range(headerNum):
-                    imageID = np.copy(image)
+                    imageID = np.copy(image).astype(np.uint8)
                     cls = anchorBoxGtClass[levelId]
                     box = anchorBoxGt[levelId]
                     cls = cls.to('cpu').numpy()
@@ -191,16 +192,16 @@ for e in range(1, 1+ cfg.train.epoch):
         loss_.backward()
         optimizer.step()
 
-    #1个epoch print
-    with torch.no_grad():
-        lossp = torch.clone(loss_)
-        gioulossp = torch.clone(giouloss)
-        dflossp = torch.clone(dfloss)
-        qflossp = torch.clone(qfloss)
-        print(e, "total:", lossp.to('cpu').numpy(),
-                " giouloss:", gioulossp.to('cpu').numpy(),
-                " dfloss:",dflossp.to('cpu').numpy(),
-                " qfloss:",qflossp .to('cpu').numpy())
+        #1个epoch print
+        with torch.no_grad():
+            lossp = torch.clone(loss_)
+            gioulossp = torch.clone(giouloss)
+            dflossp = torch.clone(dfloss)
+            qflossp = torch.clone(qfloss)
+            print(e, "total:", lossp.to('cpu').numpy(),
+                    " giouloss:", gioulossp.to('cpu').numpy(),
+                    " dfloss:",dflossp.to('cpu').numpy(),
+                    " qfloss:",qflossp .to('cpu').numpy())
 
     if e % 5 == 0:
         """参数"""

@@ -24,7 +24,7 @@ model:
   classNum: 10
   bboxPredNum: 8
 train:
-  workers: 0
+  workers: 1
   batchSize: 1
   epoch: 300
   giouloss: 24

@@ -43,20 +43,14 @@ class ListDataset(Dataset):
         img = cv2.imread(self.trainImgPath + self.annNames[index].split('.')[0] + '.jpg')  # , cv2.COLOR_BGR2RGB)
         img = img.astype(np.float32)
 
-        if self.showFlag: self.__show(np.copy(img).astype(np.uint8), bboxes, classes, self.annNames[index], color = (0, 0, 255))
+        winName = self.annNames[index]
+        if self.showFlag:
+            self.__show(np.copy(img).astype(np.uint8), bboxes, classes, winName, color = (0, 0, 255))
 
         """unifor resize 放在最后，输入网络的图片会有很多的0， 经过imgaug这些将会变为非0有利于学习"""
-        imgOrgShape = img.shape
-        img, effectArea, realh, realw = resizeUniform(img, self.netInputSizehw)
-
-        hsRate = realh / imgOrgShape[0]
-        wsRate = realw / imgOrgShape[1]
-        bboxes[:, 0:4:2] *= wsRate
-        bboxes[:, 0] += effectArea['x']
-        bboxes[:, 1:4:2] *= hsRate
-        bboxes[:, 1] += effectArea['y']
-
-        if self.showFlag: self.__show(np.copy(img).astype(np.uint8), bboxes, classes, self.annNames[index]+"_resize", color=(0, 0, 255))
+        img, infos, bboxes = resizeUniform(img, self.netInputSizehw, bboxes)
+        if self.showFlag:
+            self.__show(np.copy(img).astype(np.uint8), bboxes, classes, winName+"_resize", color=(0, 0, 255))
 
         if self.augFlag :
             """Img Aug With Shape, 放射变换的增强一定要放在前面，主要是0的情况"""
@@ -65,8 +59,9 @@ class ListDataset(Dataset):
             imgauger.shear(15)
             imgauger.translate(translate=[-0.2, 0.2])
             img, bboxes = (imgauger.img, imgauger.boxes)
-
             bboxes[:, 2:] = bboxes[:, 2:] - bboxes[:, :2]  # (x1,y1, x2,y2)->(x1,y1, w,h)
+            if self.showFlag:
+                self.__show(np.copy(img).astype(np.uint8), bboxes, classes, winName + "_augshape", color=(0, 0, 255))
 
             """非放射变换，放在最后， 最后的img 不用clip到（0，1）之间"""
             imgauger = ImgAugWithoutShape(img)
@@ -75,8 +70,14 @@ class ListDataset(Dataset):
             imgauger.saturation()
             imgauger.normalize1(mean = self.normalize[0], std= self.normalize[1])
             img = imgauger.img
+            if self.showFlag:
+                self.__show(np.copy(img).astype(np.uint8), bboxes, classes, winName + "_augcolor", color=(0, 0, 255))
 
-            if self.showFlag: self.__show(np.copy(img).astype(np.uint8), bboxes, classes, self.annNames[index] + "_aug", color=(0, 0, 255))
+            if self.showFlag:
+                outwh = (80,80)
+                self.__show(np.copy(cv2.resize(img,(outwh[0], outwh[1]))).astype(np.uint8),
+                            bboxes, classes, winName + "_augoutlayer",
+                            color=(0, 0, 255))
             if self.showFlag: cv2.waitKey()
 
         """return 两种return可供选择"""
