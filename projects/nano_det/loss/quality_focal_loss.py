@@ -43,7 +43,7 @@ class QualityFocalLoss(object):
         # FG cat_id: [0, num_classes -1], BG cat_id: num_classes
         bg_class_ind = pred.size(1)
         #找到pos的index
-        pos = torch.nonzero((label >= 0) & (label < bg_class_ind), as_tuple=False).squeeze(1)
+        pos = torch.nonzero(label >= 0, as_tuple=False).squeeze(1)
         #找到pos的label
         pos_label = label[pos].long()
         scale_factor = score[pos] - pred_sigmoid[pos, pos_label]

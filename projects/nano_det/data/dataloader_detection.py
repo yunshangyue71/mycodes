@@ -30,7 +30,7 @@ class ListDataset(Dataset):
         self.annNames = os.listdir(self.trainAnnoPath)#[:16]
         self.normalize = np.array(normalize)
         self.augFlag = augFlag
-        self.showFlag = 1
+        self.showFlag = 0
 
     def __getitem__(self, index):
         """bbox img org"""
