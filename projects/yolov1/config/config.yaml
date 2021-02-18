@@ -1,0 +1,40 @@
+dir:
+  #trainImgDir: '/media/q/data/datasets/2hand/egohands/myformat/images/'
+  #trainAnnoDir: '/media/q/data/datasets/2hand/egohands/myformat/annotations/detection_without_clean/'
+  trainImgDir: '/media/q/deep/me/data/0digit/m2nist/format_orgin/images/'
+  trainAnnoDir: '/media/q/deep/me/data/0digit/m2nist/format_me/train_annotation/'
+  #valAnnoDir: '/media/q/data/datasets/2hand/egohands/myformat/annotations/detection_without_clean/'
+  valAnnoDir: '/media/q/deep/me/data/0digit/m2nist/format_me/val_annotation/'
+  modelSaveDir: '/media/q/deep/me/model/nanodet/'
+  modelReloadPath : # '/media/q/deep/me/model/nanodet/15.pth'
+data:
+  augment: False
+  normalize: [[103.53, 116.28, 123.675], [57.375, 57.12, 58.395]]
+  flag: True
+
+model:
+  #netInput: (480, 320)
+  #featSizes: [[60,40],[30,20],[15,10]] #480, 320
+#  netInput: (640, 960)
+#  featSizes: [[80,120],[40,60],[20,30]]
+#  netInput: (640, 640)
+#  featSizes: [[80,80],[40,40],[20,20]]
+  netInput: (320, 320)
+  featSizes: [[40,40],[20,20],[10,10]]
+#  netInput: (480, 480)
+#  featSizes: [[60,60],[30,30],[15,15]]
+  strides : [8,16,32]
+  classNum: 1
+  bboxPredNum: 8
+train:
+  workers: 4
+  batchSize: 3
+  epoch: 300
+  giouloss: 1
+  dfloss: 1
+  qfloss: 1
+  l2: 0.0005
+  lr0: 0.03
+  warmupLr0: 0.00001
+  warmupBatch: 100
+

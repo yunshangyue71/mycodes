@@ -9,19 +9,22 @@ cfgMe.modelSize = '1.0x'
 cfgMe.activation = 'LeakReLu'
 
 class NanoNet(nn.Module):
-    def __init__(self, classNum):
+    def __init__(self, classNum, regBoxNum):
         super(NanoNet, self).__init__()
         self.backbone = ShuffleNetV2(model_size='1.0x',activation='LeakyReLU')
-        self.neck = nanodet_PAN(featureMapNum=3,
-                                bottomUpChannelsNum =[116,232,464],
-                                topDownChannelsNum = 96,
-                                bottomUp2ChannelsNum = 96,
-                                outChannelsNum = 96
+        self.neck = nanodet_PAN(#featureMapNum=3,
+                                #bottomUpChannelsNum =[116,232,464],
+                                #topDownChannelsNum = 96,
+                                #bottomUp2ChannelsNum = 96,
+                                #outChannelsNum = 96
+                                inputChanNum=[116, 232, 464],
+                                chanNum=96
                                 )
         self.clsNum = classNum
+        self.regBoxNum = regBoxNum
         self.head = nn.ModuleList()
         for i in range(3):
-            h = Head(reg_max = 8,  # defalut =8个bbox,用于分布, general focal loss format
+            h = Head(reg_max = self.regBoxNum,  # defalut =8个bbox,用于分布, general focal loss format
                     inChannels = 96, #
                     clsOutChannels = self.clsNum)
 

@@ -96,6 +96,60 @@ class FPN(nn.Module):
         outputs.reverse()
         return tuple(outputs)
         # return outputs[0]
+# 输入是bottom up 输出也是bottom up的格式
+class nanodet_PAN(nn.Module):
+    def __init__(self,
+                 inputChanNum = [116, 232, 464],
+                 chanNum = 96 # 讲输入统一到 多少个 channel
+                 ):
+        super(nanodet_PAN, self).__init__()
+        self.chanNum = chanNum
+        self.inputChanNum = inputChanNum
+        self.__convBlock()
+        # FPN 这里没有用卷积， 所以这里不用家
+        self.init_weight()
+
+    def __convBlock(self):
+        self.conModelList = nn.ModuleList()
+        for i in range(len(self.inputChanNum)):
+            c = self.inputChanNum[i]
+            ml = nn.Sequential(
+                nn.Conv2d(c, out_channels=self.chanNum, kernel_size=1, stride=1, padding=0,
+                                  groups=1, bias=False),
+                nn.ReLU()
+            )
+            self.conModelList.append(ml)
+
+    def makeLayers(self, x): # x:(0 ——>-1); 这个不是topdown和bottomup的意思， 是从0开始处理的意思
+        le = len(x)
+        y = []
+        y.append(x[0])
+        for i in range(1, le):
+            if x[0].size()[-1] < x[-1].size()[-1]:  #top down
+                a = F.interpolate(y[i - 1], size=list(x[i].size()[-2:]), mode='bilinear') # 改这里就可以改成不同的FPN
+            else:
+                a = F.interpolate(y[i - 1], size=list(x[i].size()[-2:]), mode='bilinear')
+            b = x[i]
+            y.append(a + b)
+        return y
+
+    def init_weight(self):
+        for conv in self.modules():
+            if isinstance(conv, nn.Conv2d):
+                xavier_init(conv, distribution='uniform')
+
+    def forward(self, x):# x(bottom up)
+        y = []
+        for i in range(len(x)):
+            xi = x[i]
+            xi = self.conModelList[i](xi)
+            y.append(xi)
+
+        y.reverse()                 # top down
+        y = self.makeLayers(y)
+        y.reverse()                 # bottom up
+        y = self.makeLayers(y)
+        return tuple(y)
 
 if __name__ == '__main__':
     net = FPN(cfg)
