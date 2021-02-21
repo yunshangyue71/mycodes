@@ -1,3 +1,4 @@
+#dataloader detection
 import numpy as np
 import os
 import torch
@@ -6,6 +7,7 @@ import cv2
 from data.imgaug_wo_shape import ImgAugWithoutShape
 from data.imgaug_w_shape import ImgAugWithShape
 from data.resize_uniform import resizeUniform
+
 """
 一个image一个anno.txt
 imageName.txt 
@@ -52,40 +54,42 @@ class ListDataset(Dataset):
         if self.showFlag:
             self.__show(np.copy(img).astype(np.uint8), bboxes, classes, winName+"_resize", color=(0, 0, 255))
 
-        if self.augFlag :
+        if self.augFlag:
             """Img Aug With Shape, 放射变换的增强一定要放在前面，主要是0的情况"""
             bboxes[:, 2:] = bboxes[:, :2] + bboxes[:, 2:] # (x1,y1, w,h)->(x1,y1, x2,y2)
             imgauger = ImgAugWithShape(img, bboxes)
             imgauger.shear(15)
-            imgauger.translate(translate=[-0.2, 0.2])
+            imgauger.translate(translate=0.2)
             img, bboxes = (imgauger.img, imgauger.boxes)
             bboxes[:, 2:] = bboxes[:, 2:] - bboxes[:, :2]  # (x1,y1, x2,y2)->(x1,y1, w,h)
             if self.showFlag:
                 self.__show(np.copy(img).astype(np.uint8), bboxes, classes, winName + "_augshape", color=(0, 0, 255))
 
+        imgauger = ImgAugWithoutShape(img)
+        if self.augFlag:
             """非放射变换，放在最后， 最后的img 不用clip到（0，1）之间"""
-            imgauger = ImgAugWithoutShape(img)
             imgauger.brightness()
             imgauger.constrast()
             imgauger.saturation()
-            imgauger.normalize1(mean = self.normalize[0], std= self.normalize[1])
-            img = imgauger.img
-            if self.showFlag:
-                self.__show(np.copy(img).astype(np.uint8), bboxes, classes, winName + "_augcolor", color=(0, 0, 255))
+        imgauger.normalize1(mean = self.normalize[0], std= self.normalize[1])
+        img = imgauger.img
+        if self.showFlag:
+            self.__show(np.copy(img).astype(np.uint8), bboxes, classes, winName + "_augcolor", color=(0, 0, 255))
 
-            if self.showFlag:
-                outwh = (80,80)
-                self.__show(np.copy(cv2.resize(img,(outwh[0], outwh[1]))).astype(np.uint8),
-                            bboxes, classes, winName + "_augoutlayer",
-                            color=(0, 0, 255))
-            if self.showFlag: cv2.waitKey()
+        if self.showFlag:
+            outwh = (7,7)
+            self.__show(np.copy(cv2.resize(img,(outwh[0], outwh[1]))).astype(np.uint8),
+                        bboxes, classes, winName + "_augoutlayer",
+                        color=(0, 0, 255))
+        if self.showFlag: cv2.waitKey()
 
         """return 两种return可供选择"""
         img = img.transpose(2, 0, 1)  # 因为pytorch的格式是CHW
         meta = dict(images=torch.from_numpy(img.astype(np.float32)),
-                    bboxesGt=torch.from_numpy(bboxes.astype(np.float32)),
-                    classes=torch.from_numpy(classes.astype(np.float32)),
+                    bboxesGt=bboxes.astype(np.float32),
+                    classes=classes.astype(np.float32),
                     annoName = self.annNames[index])
+
         #"""如果每个img输出的形状一样， 那么就可以下面"""
         # return torch.from_numpy(img.astype(np.float32)), \
         #        torch.from_numpy(bboxes.astype(np.float32)),\

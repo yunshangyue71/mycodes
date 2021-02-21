@@ -1,3 +1,4 @@
+#resnet
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
@@ -90,7 +91,8 @@ class ResNet(nn.Module):
 
         self.pool1 = nn.MaxPool2d(kernel_size=2)
         self.pool2 = nn.MaxPool2d(kernel_size=2)
-
+        self.pool3 = nn.MaxPool2d(kernel_size=2)
+        self.sig = nn.Sigmoid()
 
     def _make_layer(self, block, out_channels, num_blocks, stride):
         """make resnet layers(by layer i didnt mean this 'layer' was the
@@ -126,8 +128,8 @@ class ResNet(nn.Module):
         output = self.conv2(output)
         # output = output.view(output.size(0), -1)
         # output = self.fc(output)
-
-        return output
+        output = self.pool3(output)
+        return self.sig(output)
 def resnet18():
     return ResNet(ResnetBasic, [2, 2, 2, 2], channel_out = 15)
 def resnet34():
