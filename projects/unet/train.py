@@ -1,13 +1,10 @@
-from data.dataloader_detection import ListDataset
-from data.collate_function import collate_function
+from dataload.dataloader import ListDataset
 from config.config import load_config, cfg
-from net.resnet import ResNet, ResnetBasic,ResnetBasicSlim
-from loss.yololoss import yoloLoss
-from dataY.yolov1_dataY import DataY
+from net.unet import UNet
 
 import torch
+import torch.nn as nn
 from torch import optim
-from torch import nn
 
 if __name__ == '__main__':
     """config"""
@@ -18,32 +15,29 @@ if __name__ == '__main__':
     """dataset"""
     trainData = ListDataset(trainAnnoPath =cfg.dir.trainAnnoDir,  trainImgPath = cfg.dir.trainImgDir,
                             netInputSizehw = cfg.model.netInput,  augFlag=cfg.data.augment,
-                            normalize = cfg.data.normalize, imgChannelNumber=cfg.model.imgChannelNuber)
+                            imgChannelNum = cfg.data.imgChannelNum, maskChannelNum = cfg.data.maskChannelNum,
+                            normalize = cfg.data.normalize)
     trainLoader = torch.utils.data.DataLoader(
         trainData,
-        collate_fn=collate_function,
         batch_size=cfg.train.batchSize,
         shuffle=True,
         num_workers=cfg.train.workers,
         pin_memory=True,  # 如果机器计算能力好的话，就可以设置为True，
     )
-    datay = DataY(inputHW = cfg.model.netInput,  # 指定了inputsize 这是因为输入的是经过resize后的图片
-                  gride = cfg.model.featSize, # 将网络输入成了多少个网格
-                  stride = cfg.model.stride,
-                  boxNum = cfg.model.bboxPredNum,
-                  clsNum = cfg.model.clsNum)
+
 
     """准备网络"""
-    # network = ResNet(ResnetBasic, [2, 2, 2, 2], channel_out = 15)
-    network = ResNet(ResnetBasicSlim, [2, 2, 2, 2], channel_out=(cfg.model.bboxPredNum * 5 + cfg.model.clsNum))
+    network = UNet(1, cfg.model.clsNum, bilinear=True)
     network.to(device)
     if cfg.dir.modelReloadFlag:
         weights = torch.load(cfg.dir.modelSaveDir + cfg.dir.modelName)  # 加载参数
         network.load_state_dict(weights)  # 给自己的模型加载参数
 
     """指定loss"""
-    lossF = yoloLoss(boxNum = cfg.model.bboxPredNum,
-                 clsNum = cfg.model.clsNum)
+    if cfg.model.clsNum> 1:
+        lossF = nn.CrossEntropyLoss()
+    else:
+        lossF = nn.BCEWithLogitsLoss()
 
     """其余"""
     optimizer = torch.optim.Adam(network.parameters(), lr=cfg.train.lr0)
@@ -73,30 +67,25 @@ if __name__ == '__main__':
             imgs = infos['images']
 
             """dataY"""
-            bboxesGt = infos['bboxesGt']
-            classesGt = infos['classes']
-            target = datay.do(bboxesGt, classesGt)
+            masks  = infos['masks'].to(device).type(torch.long)
 
             """pred"""
             imgs = imgs.to(device).float()
             pred = network(imgs)
-            loss, lsInfo = lossF.do(pred, target)
+
+            """cal loss"""
+            loss = lossF(pred.reshape(-1, cfg.model.clsNum), masks.reshape(-1))
 
             optimizer.zero_grad()
             loss.backward()
-            nn.utils.clip_grad_value_(network.parameters(), 0.1) # gradient clip
+            nn.utils.clip_grad_value_(net.parameters(), 0.1) # gradient clip
             optimizer.step()
-            scheduler.step(loss) #可以使其他的指标
+            scheduler.step(loss)  # 可以使其他的指标
 
             with torch.no_grad():
                 if 1:
                     lossS = torch.clone(loss).to('cpu').numpy()
-                    lsConf = torch.clone(lsInfo['conf']).to('cpu').numpy()
-                    lsBox = torch.clone(lsInfo['box']).to('cpu').numpy()
-                    lsCls = torch.clone(lsInfo['cls']).to('cpu').numpy()
-                print(id,"/",e,
-                      " loss:",lossS, " lsConf:",lsConf, " lsCls:",lsCls, " lsBox:", lsBox,
-                      " lr:", lr)
+                    print(id,"/",e, " loss:", lossS, " lr:", lr)
                 if e % 5 == 0:
                     """参数"""
                     savePath = cfg.dir.modelSaveDir + str(e) + '.pth'

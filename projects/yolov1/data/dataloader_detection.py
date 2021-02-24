@@ -22,7 +22,8 @@ class ListDataset(Dataset):
     def __init__(self,
                  trainAnnoPath,  # txt files root /
                  trainImgPath,  # images root /
-                 netInputSizehw=(320, 320),
+                 netInputSizehw,
+                 imgChannelNumber,
                  augFlag=False,
                  normalize = None
                  ):
@@ -31,6 +32,7 @@ class ListDataset(Dataset):
         self.netInputSizehw = tuple(netInputSizehw)
         self.annNames = os.listdir(self.trainAnnoPath)#[:16]
         self.normalize = np.array(normalize)
+        self.imgChannelNumber = imgChannelNumber
         self.augFlag = augFlag
         self.showFlag = 0
 
@@ -42,7 +44,10 @@ class ListDataset(Dataset):
 
         bboxes = infos[:, :4]
         classes = infos[:, 4:]
-        img = cv2.imread(self.trainImgPath + self.annNames[index].split('.')[0] + '.jpg')  # , cv2.COLOR_BGR2RGB)
+        if self.imgChannelNumber == 3:
+            img = cv2.imread(self.trainImgPath + self.annNames[index].split('.')[0] + '.jpg')  # , cv2.COLOR_BGR2RGB)
+        if self.imgChannelNumber == 1:
+            img = cv2.imread(self.trainImgPath + self.annNames[index].split('.')[0] + '.jpg', cv2.IMREAD_GRAYSCALE)
         img = img.astype(np.float32)
 
         winName = self.annNames[index]
@@ -83,6 +88,8 @@ class ListDataset(Dataset):
                         color=(0, 0, 255))
         if self.showFlag: cv2.waitKey()
 
+        if self.imgChannelNumber == 1:
+            img = img[:, :, np.newaxis]
         """return 两种return可供选择"""
         img = img.transpose(2, 0, 1)  # 因为pytorch的格式是CHW
         meta = dict(images=torch.from_numpy(img.astype(np.float32)),

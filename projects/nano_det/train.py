@@ -15,6 +15,10 @@ from loss.quality_focal_loss import QualityFocalLoss
 from loss.multi_iou_cal import MultiIoUCal
 from config.config import load_config, cfg
 from loss.L1L2loss import Regularization
+from torch import optim
+import torch.nn as nn
+
+
 if __name__ == '__main__':
     """config"""
     load_config(cfg, "./config/config.yaml")
@@ -25,7 +29,7 @@ if __name__ == '__main__':
     """dataset"""
     trainData = ListDataset(trainAnnoPath =cfg.dir.trainAnnoDir,  trainImgPath = cfg.dir.trainImgDir,
                             netInputSizehw = cfg.model.netInput,  augFlag=cfg.data.augment,
-                            normalize = cfg.data.normalize)
+                            normalize = cfg.data.normalize, imgChannelNumber=cfg.model.imgChannelNumber)
     trainLoader = torch.utils.data.DataLoader(
         trainData,
         collate_fn=collate_function,
@@ -43,6 +47,7 @@ if __name__ == '__main__':
         weights = torch.load(cfg.dir.modelReloadPath)#加载参数
         network.load_state_dict(weights)#给自己的模型加载参数
     optimizer = torch.optim.Adam(network.parameters(), lr=cfg.train.lr0)
+    scheduler = optim.lr_scheduler.ReduceLROnPlateau(optimizer, 'min' if cfg.model.clsNum > 1 else 'max', patience=2)
 
     """准备一张照片level 的anchorBoxes"""
     anchorBoxes = []
@@ -227,7 +232,9 @@ if __name__ == '__main__':
                     cfg.train.l2 * l2
             optimizer.zero_grad()
             loss_.backward()
+            nn.utils.clip_grad_value_(net.parameters(), 0.1) # gradient clip
             optimizer.step()
+            scheduler.step(loss_)  # 可以使其他的指标
 
             #1个epoch print
             with torch.no_grad():

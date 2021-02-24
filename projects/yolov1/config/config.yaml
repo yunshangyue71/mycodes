@@ -18,6 +18,7 @@ model:
   stride : 64
   clsNum: 10
   bboxPredNum: 1
+  imgChannelNumber: 3
 loss:
   noobj: 0.05
   obj: 1

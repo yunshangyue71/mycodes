@@ -1,0 +1,28 @@
+dir:
+  trainImgDir: 'Z:/data_hand/mnist_detection/minist_pics/'
+  trainAnnoDir: 'Z:/data_hand/mnist_detection/format_me/train_seg_annotation/'
+  valAnnoDir: 'Z:/data_hand/mnist_detection/format_me/val_seg_annotation/'
+  modelSaveDir: 'Z:/mycode/unet_qdw/model_saved/'
+  modelName : '35.pth'
+  modelReloadFlag: False
+data:
+  augment: False
+  normalize: [[103.53, 116.28, 123.675], [57.375, 57.12, 58.395]]
+  imgChannelNum: 1
+  maskChannelNum: 1
+model:
+  netInput: (336, 336)
+  clsNum: 11 #0 background, shape augment will pad zeros
+loss:
+  noobj: 0.05
+  obj: 1
+  cls: 1
+  l2: 0.0005
+train:
+  workers: 8
+  batchSize: 12
+  epoch: 300
+  l2: 0.0005
+  lr0: 0.03
+  warmupLr0: 0.00001
+  warmupBatch: 100
