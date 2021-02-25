@@ -18,7 +18,7 @@ class ImgAugWithoutShape(object):
 
     def saturation(self, alphaLow=0.8, alphaUp=1.2, prob = 0.5):
         if random.uniform(0, 1) < prob:
-            hsvImg = cv2.cvtColor(self.img.astype(np.float32)/255, cv2.COLOR_BGR2HSV)
+            hsvImg = cv2.cvtColor(self.img.astype(np.float32)/255, cv2.COLOR_RGB2HSV)
             hsvImg[..., 1] *= random.uniform(alphaLow, alphaUp)
             self.img = cv2.cvtColor(hsvImg, cv2.COLOR_HSV2BGR) * 255
             # cv2.imshow('img', img/255)

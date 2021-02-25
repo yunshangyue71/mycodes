@@ -23,9 +23,10 @@ h           z               y
 the image is 2D , so the Z is a constant
 """
 class ImgAugWithShape(object):
-    def __init__(self, img, boxes):
+    def __init__(self, img, boxes=None, mask=None):
         self.img = img
         self.boxes = boxes
+        self.mask = mask
         self.oriHeight = img.shape[0]  # shape(h,w,c)
         self.oriWidth = img.shape[1]
 
@@ -47,7 +48,10 @@ class ImgAugWithShape(object):
         M = P @ self.C
         M = self.T @ M
         self.img = cv2.warpPerspective(self.img, M, dsize=None)
-        self.boxes = self.warpBoxes(M)
+        if self.boxes is not None:
+            self.boxes = self.warpBoxes(M)
+        if self.mask is not None:
+            self.mask = cv2.warpPerspective(self.mask, M, dsize=None)
 
     def flipud(self, prob=0.5):
         P = np.eye(3)
@@ -57,7 +61,10 @@ class ImgAugWithShape(object):
         M = P @ self.C
         M = self.T @ M
         self.img = cv2.warpPerspective(self.img, M, dsize=None)
-        self.boxes = self.warpBoxes(M)
+        if self.boxes is not None:
+            self.boxes = self.warpBoxes(M)
+        if self.mask is not None:
+            self.mask = cv2.warpPerspective(self.mask, M, dsize=None)
 
     #degree du
     def rotation(self, degree, prob = 0.5):
@@ -69,7 +76,10 @@ class ImgAugWithShape(object):
         M = R @ self.C
         M = self.T @ M
         self.img = cv2.warpPerspective(self.img, M, dsize=None)
-        self.boxes = self.warpBoxes(M)
+        if self.boxes is not None:
+            self.boxes = self.warpBoxes(M)
+        if self.mask is not None:
+            self.mask = cv2.warpPerspective(self.mask, M, dsize=None)
 
     #从中心放大 缩小图片，保持最终的尺寸不变, padding zero /cut
     def scale(self, ratio=(0.8, 1.2), prob = 0.5):
@@ -82,7 +92,10 @@ class ImgAugWithShape(object):
         M = Scl @ self.C
         M = self.T @ M
         self.img = cv2.warpPerspective(self.img, M, dsize=None)
-        self.boxes = self.warpBoxes(M)
+        if self.boxes is not None:
+            self.boxes = self.warpBoxes(M)
+        if self.mask is not None:
+            self.mask = cv2.warpPerspective(self.mask, M, dsize=None)
 
     # width, height scale different num
     def stretch(self, width_ratio=(0.8, 1), height_ratio=(0.8, 1), prob=0.5):
@@ -94,7 +107,10 @@ class ImgAugWithShape(object):
         M = Str @ self.C
         M = self.T @ M
         self.img = cv2.warpPerspective(self.img, M, dsize=None)
-        self.boxes = self.warpBoxes(M)
+        if self.boxes is not None:
+            self.boxes = self.warpBoxes(M)
+        if self.mask is not None:
+            self.mask = cv2.warpPerspective(self.mask, M, dsize=None)
 
     #镜头畸变, padding zero
     def shear(self, degree=3, prob = 0.5):
@@ -106,7 +122,10 @@ class ImgAugWithShape(object):
         M = Sh @ self.C
         M = self.T @ M
         self.img = cv2.warpPerspective(self.img, M, dsize=None)
-        self.boxes = self.warpBoxes(M)
+        if self.boxes is not None:
+            self.boxes = self.warpBoxes(M)
+        if self.mask is not None:
+            self.mask = cv2.warpPerspective(self.mask, M, dsize=None)
 
     #up donw remove translate pixes, padding zero
     def translate(self, translate=3, prob=0.5):
@@ -118,7 +137,10 @@ class ImgAugWithShape(object):
         M = T @ self.C
         M = self.T @ M
         self.img = cv2.warpPerspective(self.img, M, dsize=None)
-        self.boxes = self.warpBoxes(M)
+        if self.boxes is not None:
+            self.boxes = self.warpBoxes(M)
+        if self.mask is not None:
+            self.mask =  self.mask = cv2.warpPerspective(self.mask, M, dsize=None)
 
     def warpBoxes(self, M):
         n = len(self.boxes)

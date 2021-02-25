@@ -1,0 +1,32 @@
+dir:
+#  trainImgDir: 'Z:/data_hand/mnist_detection/minist_pics/'
+#  trainAnnoDir: 'Z:/data_hand/mnist_detection/format_me/train_seg_annotation/'
+#  valAnnoDir: 'Z:/data_hand/mnist_detection/format_me/val_seg_annotation/'
+#  modelSaveDir: "Z:\\mycode\\unet\\model_saved\\"
+  trainImgDir: '/media/q/deep/me/data/0digit/m2nist/format_orgin/images/'
+  trainAnnoDir: '/media/q/deep/me/data/0digit/m2nist/format_me/train_seg_annotation/'
+  valAnnoDir: '/media/q/deep/me/data/0digit/m2nist/format_me/val_seg_annotation/'
+  # modelSaveDir: "Z:\\mycode\\unet\\model_saved\\"
+  modelSaveDir: "/media/q/deep/me/model/unet/"
+  modelName : '35.pth'
+  modelReloadFlag: False
+data:
+  augment: True
+  normalize: [[103.53, 116.28, 123.675], [57.375, 57.12, 58.395]]     #[[103.53, 116.28, 123.675], [57.375, 57.12, 58.395]]
+  imgChannelNum: 3
+  maskChannelNum: 1
+model:
+  netInput: (336, 336)
+  clsNum: 11 #0 background, shape augment will pad zeros
+loss:
+  l2: 0.0005
+train:
+  workers: 8
+  batchSize: 8
+  epoch: 300
+  lr0: 0.03
+  lrReduceFactor: 0.3
+  lrReduceEpoch: 10    # N epoch, lr must  times lrReduceFactor
+  lrPatience: 2 # train loss or val score will not improve, in N epoch
+  warmupLr0: 0.00001
+  warmupBatch: 100

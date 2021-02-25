@@ -20,7 +20,9 @@ class ListDataset(Dataset):
     def __init__(self,
                  trainAnnoPath,  # txt files root /
                  trainImgPath,  # images root /
-                 netInputSizehw=(320, 320),
+                 netInputSizehw,
+                 maskChannelNumber,
+                 imgChannelNumber,
                  augFlag=False,
                  normalize = None
                  ):
@@ -33,14 +35,15 @@ class ListDataset(Dataset):
         self.showFlag = 0
 
 
-        self.maskChannelNumber = 1
-        self.imgChannelNumber = 1
+        self.maskChannelNumber = maskChannelNumber
+        self.imgChannelNumber = imgChannelNumber
 
     def __getitem__(self, index):
         """bbox img org"""
         maskPath = self.trainAnnoPath + self.annNames[index]
         if self.imgChannelNumber == 3:
-            img = cv2.imread(self.trainImgPath + self.annNames[index].split('.')[0] + '.jpg' , cv2.COLOR_BGR2RGB)
+            img = cv2.imread(self.trainImgPath + self.annNames[index].split('.')[0] + '.jpg' )#, cv2.COLOR_BGR2RGB)
+            img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
         if self.imgChannelNumber == 1:
             img = cv2.imread(self.trainImgPath + self.annNames[index].split('.')[0] + '.jpg', cv2.IMREAD_GRAYSCALE)
         img = img.astype(np.float32)
@@ -64,10 +67,10 @@ class ListDataset(Dataset):
             cv2.imshow(winName+"resize_mask", mask.astype(np.uint8))
         if self.augFlag:
             """Img Aug With Shape, 放射变换的增强一定要放在前面，主要是0的情况"""
-            imgauger = ImgAugWithShape(img, bboxes)
+            imgauger = ImgAugWithShape(img, boxes= None, mask=mask)
             imgauger.shear(15)
-            imgauger.translate(translate=[-0.2, 0.2])
-            img, bboxes = (imgauger.img, imgauger.boxes)
+            imgauger.translate(translate=0.2)
+            img, mask = (imgauger.img, imgauger.mask)
 
             if self.showFlag:
                 cv2.imshow(winName + "_augshape", img.astype(np.uint8))
@@ -77,8 +80,9 @@ class ListDataset(Dataset):
             imgauger = ImgAugWithoutShape(img)
             imgauger.brightness()
             imgauger.constrast()
-            imgauger.saturation()
-            imgauger.normalize1(mean = self.normalize[0], std= self.normalize[1])
+            if self.imgChannelNumber == 3:
+                imgauger.saturation()
+            #imgauger.normalize1(mean = self.normalize[0], std= self.normalize[1])
             img = imgauger.img
             if self.showFlag:
                 cv2.imshow(winName + "_augcolor", img.astype(np.uint8))

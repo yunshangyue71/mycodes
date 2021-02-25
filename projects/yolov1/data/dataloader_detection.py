@@ -46,6 +46,7 @@ class ListDataset(Dataset):
         classes = infos[:, 4:]
         if self.imgChannelNumber == 3:
             img = cv2.imread(self.trainImgPath + self.annNames[index].split('.')[0] + '.jpg')  # , cv2.COLOR_BGR2RGB)
+            img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
         if self.imgChannelNumber == 1:
             img = cv2.imread(self.trainImgPath + self.annNames[index].split('.')[0] + '.jpg', cv2.IMREAD_GRAYSCALE)
         img = img.astype(np.float32)
