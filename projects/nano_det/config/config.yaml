@@ -9,8 +9,8 @@ dir:
   modelReloadPath : '/media/q/deep/me/model/nanodet/15.pth'
 data:
   augment: True
-  normalize: [[103.53, 116.28, 123.675], [57.375, 57.12, 58.395]]
-  flag: True
+  normalize: [[103.53, 116.28, 123.675], [57.375, 57.12, 58.395]] #[mean, std]
+  imgChannelNumber: 3
 
 model:
   #netInput: (480, 320)

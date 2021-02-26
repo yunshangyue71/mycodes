@@ -9,9 +9,9 @@ cfgMe.modelSize = '1.0x'
 cfgMe.activation = 'LeakReLu'
 
 class NanoNet(nn.Module):
-    def __init__(self, classNum, regBoxNum):
+    def __init__(self, classNum, imgChannelNumber,regBoxNum):
         super(NanoNet, self).__init__()
-        self.backbone = ShuffleNetV2(model_size='1.0x',activation='LeakyReLU')
+        self.backbone = ShuffleNetV2(imgChannelNumber, model_size='1.0x', activation='LeakyReLU')
         self.neck = nanodet_PAN(#featureMapNum=3,
                                 #bottomUpChannelsNum =[116,232,464],
                                 #topDownChannelsNum = 96,

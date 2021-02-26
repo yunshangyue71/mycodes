@@ -77,6 +77,8 @@ if __name__ == '__main__':
             """pred"""
             pred = network(imgs)
 
+            """post"""
+            pred = pred.permute(0, 2, 3, 1)
             """cal loss"""
             loss = lossF(pred.reshape(-1, cfg.model.clsNum), masks.reshape(-1))
             l1, l2 =  Regularization(network)

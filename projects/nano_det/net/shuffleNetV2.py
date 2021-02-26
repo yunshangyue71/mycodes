@@ -4,6 +4,7 @@ from utils.activation import act_layers
 
 class ShuffleNetV2(nn.Module):
     def __init__(self,
+                 imgChannelNumber,
                  model_size='1.5x',
                  out_stages=(2, 3, 4),
                  with_last_conv=False,
@@ -31,7 +32,7 @@ class ShuffleNetV2(nn.Module):
             raise NotImplementedError
 
         # building first layer
-        input_channels = 3
+        input_channels = imgChannelNumber
         output_channels = self._stage_out_channels[0]
         self.conv1 = nn.Sequential(
 

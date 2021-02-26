@@ -71,16 +71,15 @@ class ListDataset(Dataset):
             if self.showFlag:
                 self.__show(np.copy(img).astype(np.uint8), bboxes, classes, winName + "_augshape", color=(0, 0, 255))
 
-        imgauger = ImgAugWithoutShape(img)
-        if self.augFlag:
             """非放射变换，放在最后， 最后的img 不用clip到（0，1）之间"""
+            imgauger = ImgAugWithoutShape(img)
             imgauger.brightness()
             imgauger.constrast()
             imgauger.saturation()
-        imgauger.normalize1(mean = self.normalize[0], std= self.normalize[1])
-        img = imgauger.img
-        if self.showFlag:
-            self.__show(np.copy(img).astype(np.uint8), bboxes, classes, winName + "_augcolor", color=(0, 0, 255))
+            #imgauger.normalize1(mean = self.normalize[0], std= self.normalize[1])
+            img = imgauger.img
+            if self.showFlag:
+                self.__show(np.copy(img).astype(np.uint8), bboxes, classes, winName + "_augcolor", color=(0, 0, 255))
 
         if self.showFlag:
             outwh = (7,7)

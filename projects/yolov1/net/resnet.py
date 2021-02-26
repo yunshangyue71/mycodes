@@ -68,13 +68,13 @@ class ResnetBasicSlim(nn.Module):
         return nn.ReLU(inplace=True)(self.residual_function(x) + self.shortcut(x))
 
 class ResNet(nn.Module):
-    def __init__(self, block, num_block, channel_out=100):
+    def __init__(self, block, num_block,channel_in, channel_out=100): # in , gray scale or RGB
         super().__init__()
 
         self.in_channels = 64
 
         self.conv1 = nn.Sequential(
-            nn.Conv2d(3, 64, kernel_size=3, padding=1, bias=False),
+            nn.Conv2d(channel_in, 64, kernel_size=3, padding=1, bias=False),
             nn.BatchNorm2d(64),
             nn.ReLU(inplace=True))
         self.conv2 = nn.Sequential(

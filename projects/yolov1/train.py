@@ -4,6 +4,7 @@ from config.config import load_config, cfg
 from net.resnet import ResNet, ResnetBasic,ResnetBasicSlim
 from loss.yololoss import yoloLoss
 from dataY.yolov1_dataY import DataY
+from loss.L1L2loss import Regularization
 
 import torch
 from torch import optim
@@ -35,7 +36,9 @@ if __name__ == '__main__':
 
     """准备网络"""
     # network = ResNet(ResnetBasic, [2, 2, 2, 2], channel_out = 15)
-    network = ResNet(ResnetBasicSlim, [2, 2, 2, 2], channel_out=(cfg.model.bboxPredNum * 5 + cfg.model.clsNum))
+    network = ResNet(ResnetBasicSlim, [2, 2, 2, 2],
+                     channel_in=cfg.data.imgChannelNumber,
+                     channel_out=(cfg.model.bboxPredNum * 5 + cfg.model.clsNum))
     network.to(device)
     if cfg.dir.modelReloadFlag:
         weights = torch.load(cfg.dir.modelSaveDir + cfg.dir.modelName)  # 加载参数
@@ -70,7 +73,10 @@ if __name__ == '__main__':
                     param_group['lr'] = lr
 
             """dataX"""
-            imgs = infos['images']
+            imgs = infos['images'].to(device).float()
+            mean = torch.tensor(cfg.data.normalize[0]).cuda().reshape(3, 1, 1)
+            std = torch.tensor(cfg.data.normalize[1]).cuda().reshape(3, 1, 1)
+            imgs = (imgs - mean) / std
 
             """dataY"""
             bboxesGt = infos['bboxesGt']
@@ -78,9 +84,13 @@ if __name__ == '__main__':
             target = datay.do(bboxesGt, classesGt)
 
             """pred"""
-            imgs = imgs.to(device).float()
+            # imgs = imgs.to(device).float()
             pred = network(imgs)
+
+            """cal loss"""
             loss, lsInfo = lossF.do(pred, target)
+            l1, l2 = Regularization(network)
+            loss += cfg.loss.l2 * l2
 
             optimizer.zero_grad()
             loss.backward()

@@ -41,7 +41,9 @@ if __name__ == '__main__':
     """END"""
 
     """准备网络"""
-    network = NanoNet(classNum=cfg.model.classNum,  regBoxNum = cfg.model.bboxPredNum)
+    network = NanoNet(classNum=cfg.model.classNum,
+                      imgChannelNum = cfg.data.imgChannelNumer,
+                      regBoxNum = cfg.model.bboxPredNum)
     network.to(device)
     if cfg.dir.modelReloadPath is not None:
         weights = torch.load(cfg.dir.modelReloadPath)#加载参数
@@ -76,10 +78,13 @@ if __name__ == '__main__':
                     param_group['lr'] = lr
 
             """forward and pred"""
-            imgs = infos['images']
+            imgs = infos['images'].to(device).float()
+            mean = torch.tensor(cfg.data.normalize[0]).cuda().reshape(3, 1, 1)
+            std = torch.tensor(cfg.data.normalize[1]).cuda().reshape(3, 1, 1)
+            imgs = (imgs - mean) / std
+
             bboxesGt = infos['bboxesGt']
             classesGt = infos['classes']
-            imgs = imgs.to(device).float()
             boxPred, clsPred = network(imgs)
             realBatchSize = imgs.shape[0]  # 最后一个batch可能数目不够
 
@@ -232,7 +237,7 @@ if __name__ == '__main__':
                     cfg.train.l2 * l2
             optimizer.zero_grad()
             loss_.backward()
-            nn.utils.clip_grad_value_(net.parameters(), 0.1) # gradient clip
+            nn.utils.clip_grad_value_(network.parameters(), 0.1) # gradient clip
             optimizer.step()
             scheduler.step(loss_)  # 可以使其他的指标
 

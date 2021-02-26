@@ -74,17 +74,17 @@ class ListDataset(Dataset):
             imgauger.brightness()
             imgauger.constrast()
             imgauger.saturation()
-            imgauger.normalize1(mean = self.normalize[0], std= self.normalize[1])
+            # imgauger.normalize1(mean = self.normalize[0], std= self.normalize[1])
             img = imgauger.img
             if self.showFlag:
                 self.__show(np.copy(img).astype(np.uint8), bboxes, classes, winName + "_augcolor", color=(0, 0, 255))
 
-            if self.showFlag:
-                outwh = (80,80)
-                self.__show(np.copy(cv2.resize(img,(outwh[0], outwh[1]))).astype(np.uint8),
-                            bboxes, classes, winName + "_augoutlayer",
-                            color=(0, 0, 255))
-            if self.showFlag: cv2.waitKey()
+        if self.showFlag:
+            outwh = (80,80)
+            self.__show(np.copy(cv2.resize(img,(outwh[0], outwh[1]))).astype(np.uint8),
+                        bboxes, classes, winName + "_augoutlayer",
+                        color=(0, 0, 255))
+        if self.showFlag: cv2.waitKey()
 
         """return 两种return可供选择"""
         if self.imgChannelNumber == 1:
