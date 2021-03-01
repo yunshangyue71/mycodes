@@ -25,7 +25,7 @@ model:
   imgChannelNumber: 3
   featSizes: [[60,60],[30,30],[15,15]]
   strides : [8,16,32]
-  classNum: 1
+  clsNum: 1
   bboxPredNum: 8
 train:
   workers: 8

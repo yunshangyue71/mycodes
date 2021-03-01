@@ -100,8 +100,8 @@ class ImgAugWithShape(object):
     def shear(self, degree=3, prob = 0.5):
         Sh = np.eye(3)
         if random.random() < prob:
-            Sh[0, 1] = math.tan(random.uniform(-degree, degree) * math.pi / 180)  # x shear (deg)
-            Sh[1, 0] = math.tan(random.uniform(-degree, degree) * math.pi / 180)  # y shear (deg)
+            Sh[0, 1] = math.tan(random.uniform(degree, degree) * math.pi / 180)  # x shear (deg)
+            Sh[1, 0] = math.tan(random.uniform(degree, degree) * math.pi / 180)  # y shear (deg)
 
         M = Sh @ self.C
         M = self.T @ M
@@ -109,11 +109,11 @@ class ImgAugWithShape(object):
         self.boxes = self.warpBoxes(M)
 
     #up donw remove translate pixes, padding zero
-    def translate(self, translate=3, prob=0.5):
+    def translate(self, translate=0.2, prob=0.5):
         T = np.eye(3)
         if random.random() < prob:
-            T[0, 2] = random.uniform(0.5 - translate, 0.5 + translate) * self.oriWidth  # x translation
-            T[1, 2] = random.uniform(0.5 - translate, 0.5 + translate) * self.oriHeight  # y translation
+            T[0, 2] = random.uniform(-translate, +translate) * self.oriWidth  # x translation
+            T[1, 2] = random.uniform(-translate,  +translate) * self.oriHeight  # y translation
 
         M = T @ self.C
         M = self.T @ M

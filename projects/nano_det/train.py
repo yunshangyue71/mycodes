@@ -41,8 +41,8 @@ if __name__ == '__main__':
     """END"""
 
     """准备网络"""
-    network = NanoNet(classNum=cfg.model.classNum,
-                      imgChannelNum = cfg.data.imgChannelNumer,
+    network = NanoNet(classNum=cfg.model.clsNum,
+                      imgChannelNumber = cfg.data.imgChannelNumber,
                       regBoxNum = cfg.model.bboxPredNum)
     network.to(device)
     if cfg.dir.modelReloadPath is not None:
@@ -165,7 +165,7 @@ if __name__ == '__main__':
                 boxGtAnchorDist = bbox2distance(points, boxGtAnchorLevel)    # target 距离， 像素单位
 
                 """pred"""
-                clsPredLevel = clsPred[level].reshape(-1, cfg.model.classNum)
+                clsPredLevel = clsPred[level].reshape(-1, cfg.model.clsNum)
                 boxPredLevel = boxPred[level].reshape(-1, 4 * cfg.model.bboxPredNum)             # pred 概率
 
                 # box 预测的是 到 anchor点的gride距离是0，1，2，3，4，5，6，7的概率

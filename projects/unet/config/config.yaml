@@ -8,8 +8,8 @@ dir:
   valAnnoDir: '/media/q/deep/me/data/0digit/m2nist/format_me/val_seg_annotation/'
   # modelSaveDir: "Z:\\mycode\\unet\\model_saved\\"
   modelSaveDir: "/media/q/deep/me/model/unet/"
-  modelName : '35.pth'
-  modelReloadFlag: False
+  modelName : '4.pth'
+  modelReloadFlag: True
 data:
   augment: True
   normalize: [[103.53, 116.28, 123.675], [57.375, 57.12, 58.395]]     #[[103.53, 116.28, 123.675], [57.375, 57.12, 58.395]]
@@ -21,12 +21,12 @@ model:
 loss:
   l2: 0.0005
 train:
-  workers: 8
+  workers: 0
   batchSize: 8
   epoch: 300
   lr0: 0.03
   lrReduceFactor: 0.3
-  lrReduceEpoch: 10    # N epoch, lr must  times lrReduceFactor
-  lrPatience: 2 # train loss or val score will not improve, in N epoch
+  lrReduceEpoch: 3    # N epoch, lr must  times lrReduceFactor
+  lrPatience: 102 # train loss or val score will not improve, in N epoch
   warmupLr0: 0.00001
   warmupBatch: 100

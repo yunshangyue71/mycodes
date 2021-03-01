@@ -19,7 +19,7 @@ if __name__ == '__main__':
     """dataset"""
     trainData = ListDataset(trainAnnoPath =cfg.dir.trainAnnoDir,  trainImgPath = cfg.dir.trainImgDir,
                             netInputSizehw = cfg.model.netInput,  augFlag=cfg.data.augment,
-                            normalize = cfg.data.normalize, imgChannelNumber=cfg.model.imgChannelNuber)
+                            normalize = cfg.data.normalize, imgChannelNumber=cfg.model.imgChannelNumber)
     trainLoader = torch.utils.data.DataLoader(
         trainData,
         collate_fn=collate_function,
@@ -35,7 +35,6 @@ if __name__ == '__main__':
                   clsNum = cfg.model.clsNum)
 
     """准备网络"""
-    # network = ResNet(ResnetBasic, [2, 2, 2, 2], channel_out = 15)
     network = ResNet(ResnetBasicSlim, [2, 2, 2, 2],
                      channel_in=cfg.data.imgChannelNumber,
                      channel_out=(cfg.model.bboxPredNum * 5 + cfg.model.clsNum))
@@ -50,14 +49,14 @@ if __name__ == '__main__':
 
     """其余"""
     optimizer = torch.optim.Adam(network.parameters(), lr=cfg.train.lr0)
-    scheduler = optim.lr_scheduler.ReduceLROnPlateau(optimizer, 'min' if cfg.model.clsNum > 1 else 'max', patience=2)
+    #scheduler = optim.lr_scheduler.ReduceLROnPlateau(optimizer, mode='min', patience=cfg.train.lrPatience)
     warmUpFlag = True if cfg.train.warmupBatch is not None else False
     warmUpIter = 0
 
     for e in range(1, 1+ cfg.train.epoch):
         """set lr"""
         if not warmUpFlag:
-            lr = (cfg.train.lr0 / (pow(3, (e) // 3)))
+            lr = (cfg.train.lr0 * (pow(cfg.train.lrReduceFactor, (e) // cfg.train.lrReduceEpoch)))
             for param_group in optimizer.param_groups:
                 param_group['lr'] = lr
 
@@ -84,7 +83,6 @@ if __name__ == '__main__':
             target = datay.do(bboxesGt, classesGt)
 
             """pred"""
-            # imgs = imgs.to(device).float()
             pred = network(imgs)
 
             """cal loss"""
@@ -94,9 +92,9 @@ if __name__ == '__main__':
 
             optimizer.zero_grad()
             loss.backward()
-            nn.utils.clip_grad_value_(network.parameters(), 0.1) # gradient clip
+            #nn.utils.clip_grad_value_(network.parameters(), 0.5) # gradient clip
             optimizer.step()
-            scheduler.step(loss) #可以使其他的指标
+            #scheduler.step(loss) #可以使其他的指标
 
             with torch.no_grad():
                 if 1:
@@ -107,7 +105,7 @@ if __name__ == '__main__':
                 print(id,"/",e,
                       " loss:",lossS, " lsConf:",lsConf, " lsCls:",lsCls, " lsBox:", lsBox,
                       " lr:", lr)
-                if e % 5 == 0:
-                    """参数"""
-                    savePath = cfg.dir.modelSaveDir + str(e) + '.pth'
-                    torch.save(network.state_dict(), savePath)  # save
+            if e % 2 == 0:
+                """参数"""
+                savePath = cfg.dir.modelSaveDir + str(e) + '.pth'
+                torch.save(network.state_dict(), savePath)  # save

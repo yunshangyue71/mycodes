@@ -2,7 +2,7 @@
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
-
+from net.init_net import kaiming_init
 class ResnetBasic(nn.Module):
     """Basic Block for resnet 18 and resnet 34
         x--CnnBNRelu--CnnBN   + ReLU ---out
@@ -32,10 +32,33 @@ class ResnetBasic(nn.Module):
                 nn.Conv2d(in_channels, out_channels * ResnetBasic.expansion, kernel_size=1, stride=stride, bias=False),
                 nn.BatchNorm2d(out_channels * ResnetBasic.expansion)
             )
+        self._initialize_weights()
 
     def forward(self, x):
         return nn.ReLU(inplace=True)(self.residual_function(x) + self.shortcut(x))
-
+    def _initialize_weights(self):
+        for name, m in self.named_modules():
+            if isinstance(m, nn.Conv2d):
+                if 'first' in name:
+                    nn.init.normal_(m.weight, 0, 0.01)
+                else:
+                    nn.init.normal_(m.weight, 0, 1.0 / m.weight.shape[1])
+                if m.bias is not None:
+                    nn.init.constant_(m.bias, 0)
+            elif isinstance(m, nn.BatchNorm2d):
+                nn.init.constant_(m.weight, 1)
+                if m.bias is not None:
+                    nn.init.constant_(m.bias, 0.0001)
+                nn.init.constant_(m.running_mean, 0)
+            elif isinstance(m, nn.BatchNorm1d):
+                nn.init.constant_(m.weight, 1)
+                if m.bias is not None:
+                    nn.init.constant_(m.bias, 0.0001)
+                nn.init.constant_(m.running_mean, 0)
+            elif isinstance(m, nn.Linear):
+                nn.init.normal_(m.weight, 0, 0.01)
+                if m.bias is not None:
+                    nn.init.constant_(m.bias, 0)
 class ResnetBasicSlim(nn.Module):
     '''
     减少网络的计算, 常用于layer大于50的网络
@@ -94,6 +117,8 @@ class ResNet(nn.Module):
         self.pool3 = nn.MaxPool2d(kernel_size=2)
         self.sig = nn.Sigmoid()
 
+        self._initialize_weights()
+
     def _make_layer(self, block, out_channels, num_blocks, stride):
         """make resnet layers(by layer i didnt mean this 'layer' was the
         same as a neuron netowork layer, ex. conv layer), one layer may
@@ -130,6 +155,30 @@ class ResNet(nn.Module):
         # output = self.fc(output)
         output = self.pool3(output)
         return self.sig(output)
+
+    def _initialize_weights(self):
+        for name, m in self.named_modules():
+            if isinstance(m, nn.Conv2d):
+                if 'first' in name:
+                    nn.init.normal_(m.weight, 0, 0.01)
+                else:
+                    nn.init.normal_(m.weight, 0, 1.0 / m.weight.shape[1])
+                if m.bias is not None:
+                    nn.init.constant_(m.bias, 0)
+            elif isinstance(m, nn.BatchNorm2d):
+                nn.init.constant_(m.weight, 1)
+                if m.bias is not None:
+                    nn.init.constant_(m.bias, 0.0001)
+                nn.init.constant_(m.running_mean, 0)
+            elif isinstance(m, nn.BatchNorm1d):
+                nn.init.constant_(m.weight, 1)
+                if m.bias is not None:
+                    nn.init.constant_(m.bias, 0.0001)
+                nn.init.constant_(m.running_mean, 0)
+            elif isinstance(m, nn.Linear):
+                nn.init.normal_(m.weight, 0, 0.01)
+                if m.bias is not None:
+                    nn.init.constant_(m.bias, 0)
 def resnet18():
     return ResNet(ResnetBasic, [2, 2, 2, 2], channel_out = 15)
 def resnet34():

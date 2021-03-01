@@ -94,7 +94,7 @@ if __name__ == '__main__':
                 if 1:
                     lossS = torch.clone(loss).to('cpu').numpy()
                     print(id,"/",e, " loss:", lossS, " lr:", lr)
-                if e % 5 == 0:
+                if e % 1 == 0:
                     """参数"""
                     savePath = cfg.dir.modelSaveDir + str(e) + '.pth'
                     torch.save(network.state_dict(), savePath)  # save
