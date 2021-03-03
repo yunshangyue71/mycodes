@@ -2,9 +2,11 @@ dir:
 #  trainImgDir: 'D:/data/m2nist/minist_pics/'
 #  trainAnnoDir: 'D:/data/m2nist/format_me/train_annotation/'
 #  valAnnoDir: 'D:/data/m2nist/format_me/val_annotation/'
-  trainImgDir: '/media/q/deep/me/data/0digit/m2nist/format_orgin/images/'
-  trainAnnoDir: '/media/q/deep/me/data/0digit/m2nist/format_me/train_annotation/'
+#  trainImgDir: '/media/q/deep/me/data/0digit/m2nist/format_orgin/images/'
+#  trainAnnoDir: '/media/q/deep/me/data/0digit/m2nist/format_me/train_annotation/'
   valAnnoDir: '/media/q/deep/me/data/0digit/m2nist/format_me/val_annotation/'
+  trainImgDir: "/media/q/data/datasets/VOC/VOC2012/JPEGImages/"
+  trainAnnoDir: "/media/q/data/datasets/VOC/VOC2012/Annotations/"
   modelSaveDir: '/media/q/deep/me/model/yolov1/'
   modelName : '4.pth'
   modelReloadFlag: True

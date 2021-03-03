@@ -7,7 +7,7 @@ import cv2
 from data.imgaug_wo_shape import ImgAugWithoutShape
 from data.imgaug_w_shape import ImgAugWithShape
 from data.resize_uniform import resizeUniform
-
+from VOCdataset import vocBox, vocAnnos
 """
 一个image一个anno.txt
 imageName.txt 
@@ -30,16 +30,18 @@ class ListDataset(Dataset):
         self.trainAnnoPath = trainAnnoPath
         self.trainImgPath = trainImgPath
         self.netInputSizehw = tuple(netInputSizehw)
-        self.annNames = os.listdir(self.trainAnnoPath)#[:16]
+        # self.annNames = os.listdir(self.trainAnnoPath)#[:16]
+        self.annNames = vocAnnos("/media/q/data/datasets/VOC/VOC2012/ImageSets/Main/person_trainval.txt")
         self.normalize = np.array(normalize)
         self.imgChannelNumber = imgChannelNumber
         self.augFlag = augFlag
-        self.showFlag = 0
+        self.showFlag = 1
 
     def __getitem__(self, index):
         """bbox img org"""
         txtPath = self.trainAnnoPath + self.annNames[index]
-        infos = np.loadtxt(txtPath)
+        # infos = np.loadtxt(txtPath)
+        infos = vocBox(txtPath)
         infos = np.array(infos, dtype=np.float32).reshape(-1, 5)
 
         bboxes = infos[:, :4]
