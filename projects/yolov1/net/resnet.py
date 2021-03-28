@@ -153,7 +153,7 @@ class ResNet(nn.Module):
         output = self.conv2(output)
         # output = output.view(output.size(0), -1)
         # output = self.fc(output)
-        output = self.pool3(output)
+        #output = self.pool3(output)(7*7)
         return self.sig(output)
 
     def _initialize_weights(self):

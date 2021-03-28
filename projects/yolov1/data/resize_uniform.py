@@ -18,7 +18,7 @@ def resizeUniform(imgSrc, dstShape, bboxes=None):
 
         effectArea = {'x': 0, "y": top, "w": tmpw, "h": tmph}
 
-    elif ratios < ratiod:
+    else:
         tmph = hd
         tmpw = int(hd * ratios)
 
@@ -26,10 +26,6 @@ def resizeUniform(imgSrc, dstShape, bboxes=None):
         left = int((wd - tmpw) / 2)
         right = (wd - tmpw) - left
         effectArea = {'x': left, "y": 0, "w": tmpw, "h": tmph}
-    else:
-        imgOut = cv2.resize(imgSrc, (int(dstShape[1]), int(dstShape[0])))
-        effectArea  = {'x':0,"y":0,"w":wd,"h":hd}
-        return imgOut, effectArea, int(dstShape[0]), int(dstShape[1])
 
     imgOut = cv2.resize(imgSrc, (int(tmpw),  int(tmph)))
     imgPad = cv2.copyMakeBorder(imgOut, int(top), int(down), int(left), int(right),

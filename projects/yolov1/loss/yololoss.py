@@ -3,17 +3,26 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 from torch.autograd import Variable
+import math
 
 class yoloLoss(object):
     def __init__(self,
                  boxNum=2,
-                 clsNum=10):
+                 clsNum=10,
+                 lsNoObj = 0.05,
+                 lsObj=1,
+                 lsConf = 1,
+                 lsCls = 1,
+                 lsBox = 1):
         self.boxNum = boxNum
         self.clsNum = clsNum
 
-        self.lsNoObj = 0.05
-        self.lsObj = 1
-        self.lsCls = 1
+        self.lsNoObj = lsNoObj
+        self.lsObj = lsObj
+
+        self.lsConf = lsConf
+        self.lsBox = lsBox
+        self.lsCls =  lsCls
 
     def do(self, pred, target):
         '''
@@ -41,7 +50,7 @@ class yoloLoss(object):
         """cls loss"""
         clsPred = pred[:,:,:,-self.clsNum:]
         clsTarget = target[:,:,:, -self.clsNum:]
-        ls = (clsPred - clsTarget).pow(2)
+        ls = torch.pow((clsPred - clsTarget), 2)
         lsCls = ls * coobjMask_.unsqueeze(-1) * self.lsCls
 
         """bbox loss"""
@@ -49,19 +58,30 @@ class yoloLoss(object):
         xTarget = target[:, :, :, 0:(0 + 5 * self.boxNum):5]
         yPred =     pred[:, :, :, 1:(1 + 5 * self.boxNum):5]
         yTarget = target[:, :, :, 1:(1 + 5 * self.boxNum):5]
-        wPred =     pred[:, :, :, 2:(2 + 5 * self.boxNum):5]
-        wTarget = target[:, :, :, 2:(2 + 5 * self.boxNum):5]
-        hPred =     pred[:, :, :, 3:(3 + 5 * self.boxNum):5]
-        hTarget = target[:, :, :, 3:(3 + 5 * self.boxNum):5]
+        wPred =     pred[:, :, :, 2:(2 + 5 * self.boxNum):5]+10**-8
+        wTarget = target[:, :, :, 2:(2 + 5 * self.boxNum):5]+10**-8
+        hPred =     pred[:, :, :, 3:(3 + 5 * self.boxNum):5]+10**-8
+        x = float(hPred[0][0][0][0])
+        if math.isnan(x):
+            print("nn--------------",hPred)
+            raise
+            #print("nn--------------", wPred)
+        # else:
+            # print("nn",hPred)
+            # print("nn", wPred)
+        hTarget = target[:, :, :, 3:(3 + 5 * self.boxNum):5]+10**-8
         lsX = (xPred - xTarget).pow(2)
         lsY = (yPred - yTarget).pow(2)
         lsW = (wPred.sqrt() - wTarget.sqrt()).pow(2)
         lsH = (hPred.sqrt() - hTarget.sqrt()).pow(2)
         ls =  lsX + lsY + lsW + lsH
-        lsBox = ls * noobjMask * self.lsNoObj + ls * coobjMask * self.lsObj
+        # lsBox = ls * noobjMask * self.lsNoObj + ls * coobjMask * self.lsObj
+        lsBox = ls * coobjMask * self.lsObj
+        # #a =  lsBox.sum()
+        # #loss = lsConf.sum() * self.lsConf+ lsCls.sum()*self.lsCls + lsBox.sum()*self.lsBox
+        # loss = lsConf.sum() * self.lsConf +  lsBox.sum() * self.lsBox
 
-        loss = lsConf.sum() + lsCls.sum() + lsBox.sum()
         info = {"conf": lsConf.sum(),
                 "cls": lsCls.sum(),
                 "box": lsBox.sum()}
-        return loss, info
+        return info

@@ -1,4 +1,3 @@
-#dataloader detection
 import numpy as np
 import os
 import torch
@@ -7,7 +6,7 @@ import cv2
 from data.imgaug_wo_shape import ImgAugWithoutShape
 from data.imgaug_w_shape import ImgAugWithShape
 from data.resize_uniform import resizeUniform
-from VOCdataset import vocBox, vocAnnos
+from VOCdataset import vocAnnoPathes, parseVoc
 """
 一个image一个anno.txt
 imageName.txt 
@@ -18,6 +17,7 @@ imageName.txt
 output
     img 0-1
 """
+
 class ListDataset(Dataset):
     def __init__(self,
                  trainAnnoPath,  # txt files root /
@@ -30,32 +30,32 @@ class ListDataset(Dataset):
         self.trainAnnoPath = trainAnnoPath
         self.trainImgPath = trainImgPath
         self.netInputSizehw = tuple(netInputSizehw)
-        # self.annNames = os.listdir(self.trainAnnoPath)#[:16]
-        self.annNames = vocAnnos("/media/q/data/datasets/VOC/VOC2012/ImageSets/Main/person_trainval.txt")
+        self.annNames = os.listdir(self.trainAnnoPath)[:28] # format me
+        # self.annNames = vocAnnoPathes(vocTrainPath)[:28]             # format voc
         self.normalize = np.array(normalize)
         self.imgChannelNumber = imgChannelNumber
         self.augFlag = augFlag
-        self.showFlag = 1
+        self.showFlag = 0
 
     def __getitem__(self, index):
         """bbox img org"""
         txtPath = self.trainAnnoPath + self.annNames[index]
-        # infos = np.loadtxt(txtPath)
-        infos = vocBox(txtPath)
+        infos = np.loadtxt(txtPath)                       #format me
+        #infos = parseVoc(txtPath)                           #format voc
         infos = np.array(infos, dtype=np.float32).reshape(-1, 5)
 
         bboxes = infos[:, :4]
         classes = infos[:, 4:]
         if self.imgChannelNumber == 3:
-            img = cv2.imread(self.trainImgPath + self.annNames[index].split('.')[0] + '.jpg')  # , cv2.COLOR_BGR2RGB)
-            img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
+            img = cv2.imread(self.trainImgPath + self.annNames[index].split('.')[0] + '.jpg')# cv2.COLOR_BGR2RGB)
+            # img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
         if self.imgChannelNumber == 1:
             img = cv2.imread(self.trainImgPath + self.annNames[index].split('.')[0] + '.jpg', cv2.IMREAD_GRAYSCALE)
         img = img.astype(np.float32)
 
-        winName = self.annNames[index]
-        if self.showFlag:
-            self.__show(np.copy(img).astype(np.uint8), bboxes, classes, winName, color = (0, 0, 255))
+        winName = ""#self.annNames[index]
+        # if self.showFlag:
+        #     self.__show(np.copy(img).astype(np.uint8), bboxes, classes, winName, color = (0, 0, 255))
 
         """unifor resize 放在最后，输入网络的图片会有很多的0， 经过imgaug这些将会变为非0有利于学习"""
         img, infos, bboxes = resizeUniform(img, self.netInputSizehw, bboxes)
@@ -88,7 +88,10 @@ class ListDataset(Dataset):
             self.__show(np.copy(cv2.resize(img,(outwh[0], outwh[1]))).astype(np.uint8),
                         bboxes, classes, winName + "_augoutlayer",
                         color=(0, 0, 255))
-        if self.showFlag: cv2.waitKey()
+        if self.showFlag:
+            print(self.annNames[index])
+            cv2.waitKey()
+            #cv2.destroyAllWindows()
 
         if self.imgChannelNumber == 1:
             img = img[:, :, np.newaxis]

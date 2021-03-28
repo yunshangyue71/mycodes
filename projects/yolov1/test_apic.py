@@ -18,11 +18,11 @@ if __name__ == '__main__':
     print(cfg)
     device = torch.device('cuda:0')
 
-    scoreThresh = 0.9
-    iouThresh = 0.1
+    scoreThresh = 0.1
+    iouThresh = 0.2
 
     """dataset"""
-    trainData = ListDataset(trainAnnoPath=cfg.dir.valAnnoDir, trainImgPath=cfg.dir.trainImgDir,
+    trainData = ListDataset(trainAnnoPath=cfg.dir.trainAnnoDir, trainImgPath=cfg.dir.trainImgDir,
                             netInputSizehw=cfg.model.netInput, augFlag=False,
                             normalize=cfg.data.normalize, imgChannelNumber=cfg.model.imgChannelNumber)
     trainLoader = torch.utils.data.DataLoader(
@@ -51,6 +51,7 @@ if __name__ == '__main__':
 
     with torch.no_grad():
         for id, infos in enumerate(trainLoader):
+            # if id != 7: continue
             """forward and pred"""
             imgs_ = infos['images']
             image = imgs_[0]
@@ -85,8 +86,8 @@ if __name__ == '__main__':
             '''选择每个anchor 点 预测置信度最大的, bbox num = 1 代码也可以'''
             confPred = pred[:, :, :, 4:5 * cfg.model.bboxPredNum:5]
             maxNum, maxIndex = torch.max(confPred, dim=-1, keepdim=True)
-            b, h, w, c = pred.size()
-            oneHot = torch.zeros(b, h, w,  cfg.model.bboxPredNum).to("cuda:0").scatter_(-1, maxIndex, 1).type(torch.bool)
+            b_, h_, w_, c_ = pred.size()
+            oneHot = torch.zeros(b_, h_, w_,  cfg.model.bboxPredNum).to("cuda:0").scatter_(-1, maxIndex, 1).type(torch.bool)
 
             coobjMask = torch.logical_and(oneHot, torch.unsqueeze(coobjMask_, -1))
             a = torch.nonzero(coobjMask , as_tuple=False)   #
@@ -113,6 +114,7 @@ if __name__ == '__main__':
                 dets.append([cx, cy, w, h, score, c])
 
             dets = np.array(dets)
+            dets = dets.reshape(-1, 6)
             dets[:, :2] -= dets[:, 2:4] / 2
             dets[:, 2:4] += dets[:, :2]
             dets = nms(dets, iouThresh)
@@ -120,6 +122,7 @@ if __name__ == '__main__':
                 x1, y1, x2, y2, score, cls  = dets[i][0],dets[i][1], dets[i][2],dets[i][3], dets[i][4],dets[i][5],
                 cv2.rectangle(image, (int(x1), int(y1)),(int(x2), int(y2)),
                               (0,0,255), 1)
+                cv2.circle(image, (int((x1+x2)/2), int((y2+y1)/2)), color=(0,0,255),radius=2, thickness=-1)
                 cv2.putText(image, "score: "+str(round(score,3)), (int(x1), int(y1)),1,1,(0,0,255))
                 cv2.putText(image, "cls: " + str(int(cls)), (int(x1), int(y1+15)), 1, 1, (0, 0, 255))
 

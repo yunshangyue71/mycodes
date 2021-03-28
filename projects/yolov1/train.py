@@ -6,9 +6,13 @@ from loss.yololoss import yoloLoss
 from dataY.yolov1_dataY import DataY
 from loss.L1L2loss import Regularization
 
+from torch.utils.data import SubsetRandomSampler
+import numpy as np
+
 import torch
 from torch import optim
 from torch import nn
+import math
 
 if __name__ == '__main__':
     """config"""
@@ -27,6 +31,19 @@ if __name__ == '__main__':
         shuffle=True,
         num_workers=cfg.train.workers,
         pin_memory=True,  # 如果机器计算能力好的话，就可以设置为True，
+
+    )
+
+    valData = ListDataset(trainAnnoPath =cfg.dir.valAnnoDir,  trainImgPath = cfg.dir.valImgDir,
+                            netInputSizehw = cfg.model.netInput,  augFlag=cfg.data.augment,
+                            normalize = cfg.data.normalize, imgChannelNumber=cfg.model.imgChannelNumber)
+    valLoader = torch.utils.data.DataLoader(
+        trainData,
+        collate_fn=collate_function,
+        batch_size=cfg.train.batchSize,
+        shuffle=True,
+        num_workers=0,
+        pin_memory=False,  # 如果机器计算能力好的话，就可以设置为True，
     )
     datay = DataY(inputHW = cfg.model.netInput,  # 指定了inputsize 这是因为输入的是经过resize后的图片
                   gride = cfg.model.featSize, # 将网络输入成了多少个网格
@@ -45,7 +62,13 @@ if __name__ == '__main__':
 
     """指定loss"""
     lossF = yoloLoss(boxNum = cfg.model.bboxPredNum,
-                 clsNum = cfg.model.clsNum)
+                 clsNum = cfg.model.clsNum,
+                     lsNoObj=cfg.loss.noobj,
+                     lsConf=cfg.loss.conf,
+                     lsObj=cfg.loss.obj,
+                     lsCls=cfg.loss.cls,
+                     lsBox =  cfg.loss.box
+                     )
 
     """其余"""
     optimizer = torch.optim.Adam(network.parameters(), lr=cfg.train.lr0)
@@ -60,52 +83,66 @@ if __name__ == '__main__':
             for param_group in optimizer.param_groups:
                 param_group['lr'] = lr
 
-        for id, infos in enumerate(trainLoader):
-            """warmup"""
-            if warmUpFlag:
-                warmUpIter += 1
-                if warmUpIter <= cfg.train.warmupBatch:
-                    lr = cfg.train.warmupLr0 + cfg.train.lr0 * (warmUpIter-1) / cfg.train.warmupBatch
-                else:
-                    warmUpFlag = False
-                for param_group in optimizer.param_groups:
-                    param_group['lr'] = lr
 
-            """dataX"""
-            imgs = infos['images'].to(device).float()
-            mean = torch.tensor(cfg.data.normalize[0]).cuda().reshape(3, 1, 1)
-            std = torch.tensor(cfg.data.normalize[1]).cuda().reshape(3, 1, 1)
-            imgs = (imgs - mean) / std
+        trainvalLoader = {"train": trainLoader,  "val": valLoader}
+        for key, value in trainvalLoader.items():
+            for id, infos in enumerate(value):
+                if key == "val" and id >=0:
+                    break
 
-            """dataY"""
-            bboxesGt = infos['bboxesGt']
-            classesGt = infos['classes']
-            target = datay.do(bboxesGt, classesGt)
+                """warmup"""
+                if warmUpFlag:
+                    if warmUpIter < cfg.train.warmupBatch:
+                        lr = cfg.train.warmupLr0 + cfg.train.lr0 * (warmUpIter) / cfg.train.warmupBatch
+                    elif warmUpIter == cfg.train.warmupBatch:
+                        lr = cfg.train.lr0
+                        warmUpFlag = False
+                    # else:
+                        # lr = cfg.train.lr0
+                    for param_group in optimizer.param_groups:
+                        param_group['lr'] = lr
+                    warmUpIter += 1
 
-            """pred"""
-            pred = network(imgs)
+                """dataX"""
+                imgs = infos['images'].to(device).float()
+                mean = torch.tensor(cfg.data.normalize[0]).cuda().reshape(3, 1, 1)
+                std = torch.tensor(cfg.data.normalize[1]).cuda().reshape(3, 1, 1)
+                imgs = (imgs - mean) / std
 
-            """cal loss"""
-            loss, lsInfo = lossF.do(pred, target)
-            l1, l2 = Regularization(network)
-            loss += cfg.loss.l2 * l2
+                """dataY"""
+                bboxesGt = infos['bboxesGt']
+                classesGt = infos['classes']
+                target = datay.do(bboxesGt, classesGt)
 
-            optimizer.zero_grad()
-            loss.backward()
-            #nn.utils.clip_grad_value_(network.parameters(), 0.5) # gradient clip
-            optimizer.step()
-            #scheduler.step(loss) #可以使其他的指标
+                """pred"""
+                pred = network(imgs)
 
-            with torch.no_grad():
-                if 1:
+                """cal loss"""
+                lsInfo = lossF.do(pred, target)
+                loss = lsInfo["conf"] * cfg.loss.conf+  lsInfo["box"]  * cfg.loss.box+  lsInfo["cls"] * cfg.loss.cls * bool(cfg.model.clsNum-1)
+                loss = loss/cfg.train.batchSize
+                l1, l2 = Regularization(network)
+                loss += cfg.loss.l2 * l2
+
+                if key == "train":
+                    optimizer.zero_grad()
+                    loss.backward()
+                    nn.utils.clip_grad_value_(network.parameters(), 0.5) # gradient clip
+                    optimizer.step()
+                    #scheduler.step(loss) #可以使其他的指标
+
+                with torch.no_grad():
                     lossS = torch.clone(loss).to('cpu').numpy()
                     lsConf = torch.clone(lsInfo['conf']).to('cpu').numpy()
                     lsBox = torch.clone(lsInfo['box']).to('cpu').numpy()
                     lsCls = torch.clone(lsInfo['cls']).to('cpu').numpy()
-                print(id,"/",e,
-                      " loss:",lossS, " lsConf:",lsConf, " lsCls:",lsCls, " lsBox:", lsBox,
-                      " lr:", lr)
-            if e % 2 == 0:
-                """参数"""
-                savePath = cfg.dir.modelSaveDir + str(e) + '.pth'
-                torch.save(network.state_dict(), savePath)  # save
+                    if id%30==0:
+                        print(key, id,"-",int(len(trainData)/cfg.train.batchSize),"/",e,
+                          " loss:",lossS, " lsConf:",lsConf, " lsCls:",lsCls, " lsBox:", lsBox,
+                          " lr:", lr)
+
+
+        if e % 1 == 0:
+            """参数"""
+            savePath = cfg.dir.modelSaveDir + str(e) + '.pth'
+            torch.save(network.state_dict(), savePath)  # save
