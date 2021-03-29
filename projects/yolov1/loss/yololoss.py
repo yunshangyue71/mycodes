@@ -45,7 +45,7 @@ class yoloLoss(object):
         confPred = pred[:,:,:,4:5 * self.boxNum :5]
         confTarget = target[:, :, :, 4:5 * self.boxNum:5]
         ls = torch.pow((confPred - confTarget), 2)
-        lsConf = ls * noobjMask * self.lsNoObj + ls * coobjMask * self.lsObj # 假设全部都是noobj
+        lsConf =  ls * coobjMask * self.lsObj  +ls * noobjMask * self.lsNoObj  # 假设全部都是noobj
 
         """cls loss"""
         clsPred = pred[:,:,:,-self.clsNum:]

@@ -11,25 +11,25 @@ dir:
   valImgDir: "/media/q/data/datasets/VOC/VOC2007_test/JPEGImages/"
   valAnnoDir: "/media/q/data/datasets/VOC/VOC2007_test/format_me/Main/person/train/"
   modelSaveDir: '/media/q/deep/me/model/yolov1/'
-  modelName : '100.pth'
+  modelName : '55.pth'
   modelReloadFlag: 0
 data:
-  augment: False
+  augment: True
   normalize: [[103.53, 116.28, 123.675], [57.375, 57.12, 58.395]] #[mean, std]
   imgChannelNumber: 3
 model:
   netInput: (448, 448)
-  featSize: (14, 14)
-  stride : 32
+  featSize: (7, 7)
+  stride : 64
   clsNum: 1
   bboxPredNum: 1
   imgChannelNumber: 3
 loss:
-  noobj: 0.5
+  noobj: 0.05
   obj: 1
 
   cls: 1
-  conf: 10
+  conf: 5
   box: 5
   l2: 0.0005
 train:
@@ -39,8 +39,8 @@ train:
 
   l2: 0.0005
   lr0: 0.003
-  lrReduceFactor: 0.9
-  lrReduceEpoch: 3    # N epoch, lr must  times lrReduceFactor
+  lrReduceFactor: 0.93
+  lrReduceEpoch: 1    # N epoch, lr must  times lrReduceFactor
   lrPatience: 2 # train loss or val score will not improve, in N epoch
   warmupLr0: 0.00001
-  warmupBatch: 10
+  warmupBatch: 100

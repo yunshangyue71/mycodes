@@ -30,12 +30,12 @@ class ListDataset(Dataset):
         self.trainAnnoPath = trainAnnoPath
         self.trainImgPath = trainImgPath
         self.netInputSizehw = tuple(netInputSizehw)
-        self.annNames = os.listdir(self.trainAnnoPath)[:28] # format me
+        self.annNames = os.listdir(self.trainAnnoPath)[:] # format me
         # self.annNames = vocAnnoPathes(vocTrainPath)[:28]             # format voc
         self.normalize = np.array(normalize)
         self.imgChannelNumber = imgChannelNumber
         self.augFlag = augFlag
-        self.showFlag = 0
+        self.showFlag = 1
 
     def __getitem__(self, index):
         """bbox img org"""
@@ -120,6 +120,9 @@ class ListDataset(Dataset):
                           tuple((int(bboxes[i][0]) + int(bboxes[i][2]),
                                  int(bboxes[i][1]) + int(bboxes[i][3]))),
                           color, 1)
+            cv2.circle(img, tuple((int(bboxes[i][0]) + int(bboxes[i][2]/2),
+                                 int(bboxes[i][1]) + int(bboxes[i][3]/2))),
+                          2,color, -1)
         for j in range(classes.shape[0]):
             cv2.putText(img, str(classes[j]), (int(bboxes[j][0]), int(bboxes[j][1])), 1, 1, color)
         cv2.imshow(winName, img)

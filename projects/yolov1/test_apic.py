@@ -18,11 +18,11 @@ if __name__ == '__main__':
     print(cfg)
     device = torch.device('cuda:0')
 
-    scoreThresh = 0.1
+    scoreThresh = 0.5
     iouThresh = 0.2
 
     """dataset"""
-    trainData = ListDataset(trainAnnoPath=cfg.dir.trainAnnoDir, trainImgPath=cfg.dir.trainImgDir,
+    trainData = ListDataset(trainAnnoPath=cfg.dir.valAnnoDir, trainImgPath=cfg.dir.valImgDir,
                             netInputSizehw=cfg.model.netInput, augFlag=False,
                             normalize=cfg.data.normalize, imgChannelNumber=cfg.model.imgChannelNumber)
     trainLoader = torch.utils.data.DataLoader(
@@ -125,7 +125,12 @@ if __name__ == '__main__':
                 cv2.circle(image, (int((x1+x2)/2), int((y2+y1)/2)), color=(0,0,255),radius=2, thickness=-1)
                 cv2.putText(image, "score: "+str(round(score,3)), (int(x1), int(y1)),1,1,(0,0,255))
                 cv2.putText(image, "cls: " + str(int(cls)), (int(x1), int(y1+15)), 1, 1, (0, 0, 255))
+            for li in range(cfg.model.featSize[0]):
+                cv2.line(image, (int(li * cfg.model.stride), 0),(int(li * cfg.model.stride),int(cfg.model.netInput[1])),  (0,255,0),1)
 
+            for li in range(cfg.model.featSize[1]):
+                cv2.line(image, (0, int(li * cfg.model.stride)),
+                         (int(cfg.model.netInput[1]), int(li * cfg.model.stride)),  (0, 255, 0),1)
             cv2.imshow("", image)
             cv2.waitKey()
 

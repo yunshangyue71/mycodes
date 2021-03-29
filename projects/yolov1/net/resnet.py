@@ -101,10 +101,15 @@ class ResNet(nn.Module):
             nn.BatchNorm2d(64),
             nn.ReLU(inplace=True))
         self.conv2 = nn.Sequential(
-            nn.Conv2d(512 * block.expansion, channel_out, kernel_size=1, bias=True),
+            nn.Conv2d(512 * block.expansion, channel_out, kernel_size=1, bias=True, stride = 2),
             #nn.BatchNorm2d(channel_out),
             #nn.ReLU(inplace=True)
             )
+        # self.conv3 = nn.Sequential(
+        #     nn.Conv2d(512 * block.expansion, channel_out, kernel_size=1, bias=True),
+        #     # nn.BatchNorm2d(channel_out),
+        #     # nn.ReLU(inplace=True)
+        # )
         #we use a different inputsize than the original paper
         #so conv2_x's stride is 1
         self.conv2_x = self._make_layer(block, 64, num_block[0], 1)
@@ -153,7 +158,7 @@ class ResNet(nn.Module):
         output = self.conv2(output)
         # output = output.view(output.size(0), -1)
         # output = self.fc(output)
-        #output = self.pool3(output)(7*7)
+        # output = self.pool3(output) #(7*7)
         return self.sig(output)
 
     def _initialize_weights(self):
