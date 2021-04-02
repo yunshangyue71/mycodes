@@ -11,8 +11,8 @@ dir:
   valImgDir: "/media/q/data/datasets/VOC/VOC2007_test/JPEGImages/"
   valAnnoDir: "/media/q/data/datasets/VOC/VOC2007_test/format_me/Main/person/train/"
   modelSaveDir: '/media/q/deep/me/model/yolov1/'
-  modelName : '55.pth'
-  modelReloadFlag: 0
+  modelName : '3.pth'
+  modelReloadFlag: 1
 data:
   augment: True
   normalize: [[103.53, 116.28, 123.675], [57.375, 57.12, 58.395]] #[mean, std]
@@ -22,19 +22,19 @@ model:
   featSize: (7, 7)
   stride : 64
   clsNum: 1
-  bboxPredNum: 1
+  bboxPredNum: 2
   imgChannelNumber: 3
 loss:
   noobj: 0.05
   obj: 1
 
   cls: 1
-  conf: 5
+  conf: 3
   box: 5
   l2: 0.0005
 train:
-  workers: 0
-  batchSize: 14
+  workers: 4
+  batchSize: 16
   epoch: 300
 
   l2: 0.0005

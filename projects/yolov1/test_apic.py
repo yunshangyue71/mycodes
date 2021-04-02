@@ -18,7 +18,7 @@ if __name__ == '__main__':
     print(cfg)
     device = torch.device('cuda:0')
 
-    scoreThresh = 0.5
+    scoreThresh = 0.1
     iouThresh = 0.2
 
     """dataset"""
@@ -41,7 +41,9 @@ if __name__ == '__main__':
                   clsNum=cfg.model.clsNum)
     """准备网络"""
     # network = ResNet(ResnetBasic, [2, 2, 2, 2], channel_out = 15)
-    network = ResNet(ResnetBasicSlim, [2, 2, 2, 2],
+    network = ResNet(ResnetBasicSlim,
+                     # [2, 2, 2, 2],
+                     [3,4,6,3],
                      channel_in=cfg.data.imgChannelNumber,
                      channel_out=(cfg.model.bboxPredNum * 5 + cfg.model.clsNum))
     network.to(device)
@@ -121,7 +123,7 @@ if __name__ == '__main__':
             for i in range(dets.shape[0]):
                 x1, y1, x2, y2, score, cls  = dets[i][0],dets[i][1], dets[i][2],dets[i][3], dets[i][4],dets[i][5],
                 cv2.rectangle(image, (int(x1), int(y1)),(int(x2), int(y2)),
-                              (0,0,255), 1)
+                              (0,0,255), 2)
                 cv2.circle(image, (int((x1+x2)/2), int((y2+y1)/2)), color=(0,0,255),radius=2, thickness=-1)
                 cv2.putText(image, "score: "+str(round(score,3)), (int(x1), int(y1)),1,1,(0,0,255))
                 cv2.putText(image, "cls: " + str(int(cls)), (int(x1), int(y1+15)), 1, 1, (0, 0, 255))

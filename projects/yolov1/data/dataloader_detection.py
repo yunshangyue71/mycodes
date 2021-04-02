@@ -35,7 +35,7 @@ class ListDataset(Dataset):
         self.normalize = np.array(normalize)
         self.imgChannelNumber = imgChannelNumber
         self.augFlag = augFlag
-        self.showFlag = 1
+        self.showFlag = 0
 
     def __getitem__(self, index):
         """bbox img org"""
@@ -66,8 +66,8 @@ class ListDataset(Dataset):
             """Img Aug With Shape, 放射变换的增强一定要放在前面，主要是0的情况"""
             bboxes[:, 2:] = bboxes[:, :2] + bboxes[:, 2:] # (x1,y1, w,h)->(x1,y1, x2,y2)
             imgauger = ImgAugWithShape(img, bboxes)
-            imgauger.shear(15, prob =1)
-            imgauger.translate(translate=0.1, prob=1)
+            imgauger.shear(5, prob =0.3)
+            imgauger.translate(translate=0.1, prob=0.3)
             img, bboxes = (imgauger.img, imgauger.boxes)
             bboxes[:, 2:] = bboxes[:, 2:] - bboxes[:, :2]  # (x1,y1, x2,y2)->(x1,y1, w,h)
             if self.showFlag:

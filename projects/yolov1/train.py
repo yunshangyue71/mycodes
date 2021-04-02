@@ -43,7 +43,7 @@ if __name__ == '__main__':
         batch_size=cfg.train.batchSize,
         shuffle=True,
         num_workers=0,
-        pin_memory=False,  # 如果机器计算能力好的话，就可以设置为True，
+        pin_memory=True,  # 如果机器计算能力好的话，就可以设置为True，
     )
     datay = DataY(inputHW = cfg.model.netInput,  # 指定了inputsize 这是因为输入的是经过resize后的图片
                   gride = cfg.model.featSize, # 将网络输入成了多少个网格
@@ -52,7 +52,9 @@ if __name__ == '__main__':
                   clsNum = cfg.model.clsNum)
 
     """准备网络"""
-    network = ResNet(ResnetBasicSlim, [2, 2, 2, 2],
+    network = ResNet(ResnetBasicSlim,
+                     #[2, 2, 2, 2],
+                     [3,4,6,3],
                      channel_in=cfg.data.imgChannelNumber,
                      channel_out=(cfg.model.bboxPredNum * 5 + cfg.model.clsNum))
     network.to(device)
@@ -109,13 +111,14 @@ if __name__ == '__main__':
                 std = torch.tensor(cfg.data.normalize[1]).cuda().reshape(3, 1, 1)
                 imgs = (imgs - mean) / std
 
-                """dataY"""
-                bboxesGt = infos['bboxesGt']
-                classesGt = infos['classes']
-                target = datay.do(bboxesGt, classesGt)
 
                 """pred"""
                 pred = network(imgs)
+
+                """dataY"""
+                bboxesGt = infos['bboxesGt']
+                classesGt = infos['classes']
+                target = datay.do2(bboxesGt, classesGt, pred)
 
                 """cal loss"""
                 lsInfo = lossF.do(pred, target)
