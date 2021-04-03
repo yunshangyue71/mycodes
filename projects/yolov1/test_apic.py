@@ -18,7 +18,7 @@ if __name__ == '__main__':
     print(cfg)
     device = torch.device('cuda:0')
 
-    scoreThresh = 0.1
+    scoreThresh = 0.35
     iouThresh = 0.2
 
     """dataset"""
