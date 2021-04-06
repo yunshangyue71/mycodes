@@ -72,8 +72,8 @@ class yoloLoss(object):
         hTarget = target[:, :, :, 3:(3 + 5 * self.boxNum):5]+10**-8
         lsX = (xPred - xTarget).pow(2)
         lsY = (yPred - yTarget).pow(2)
-        lsW = (wPred.sqrt() - wTarget.sqrt()).pow(2)
-        lsH = (hPred.sqrt() - hTarget.sqrt()).pow(2)
+        lsW = (wPred - wTarget.sqrt()).pow(2)
+        lsH = (hPred - hTarget.sqrt()).pow(2)
         ls =  lsX + lsY + lsW + lsH
         # lsBox = ls * noobjMask * self.lsNoObj + ls * coobjMask * self.lsObj
         lsBox = ls * coobjMask * self.lsObj

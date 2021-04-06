@@ -128,6 +128,7 @@ if __name__ == '__main__':
     #line0：imagename0，xmin，ymin，xmax，ymax，label，point0x，point0y...(后面的都是分割用的点，如果没有可以不写)
     #line1：imagename0，xmin，ymin，xmax，ymax，label， point0x，point0y...(一个图像有多个框或者segment，必须拆分成多行)
     #coco格式 xmin，ymin，w， h
+
     csv_file = 'D:/data/mnist-detection/coco/label.csv'
 
     #该路径下存放所有的图片

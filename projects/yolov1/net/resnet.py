@@ -17,7 +17,7 @@ class ResnetBasic(nn.Module):
         self.residual_function = nn.Sequential(
             nn.Conv2d(in_channels, out_channels, kernel_size=3, stride=stride, padding=1, bias=False),
             nn.BatchNorm2d(out_channels),
-            nn.ReLU(inplace=True),
+            nn.LeakyReLU(inplace=True),
             nn.Conv2d(out_channels, out_channels * ResnetBasic.expansion, kernel_size=3, padding=1, bias=False),
             nn.BatchNorm2d(out_channels * ResnetBasic.expansion)
         )
@@ -35,7 +35,7 @@ class ResnetBasic(nn.Module):
         self._initialize_weights()
 
     def forward(self, x):
-        return nn.ReLU(inplace=True)(self.residual_function(x) + self.shortcut(x))
+        return nn.LeakyReLU(inplace=True)(self.residual_function(x) + self.shortcut(x))
     def _initialize_weights(self):
         for name, m in self.named_modules():
             if isinstance(m, nn.Conv2d):
@@ -99,7 +99,7 @@ class ResNet(nn.Module):
         self.conv1 = nn.Sequential(
             nn.Conv2d(channel_in, 64, kernel_size=3, padding=1, bias=False),
             nn.BatchNorm2d(64),
-            nn.ReLU(inplace=True))
+            nn.LeakyReLU(inplace=True))
         self.conv2 = nn.Sequential(
             nn.Conv2d(512 * block.expansion, channel_out, kernel_size=1, bias=True, stride = 2),
             #nn.BatchNorm2d(channel_out),

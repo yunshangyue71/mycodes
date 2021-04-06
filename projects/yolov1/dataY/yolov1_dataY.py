@@ -60,11 +60,15 @@ class DataY(object):
         b = len(boxes)
         target = []
         for k in range(b):  # 遍历batch
+            atarget = torch.zeros(self.gride[0], self.gride[1], 5 * self.boxNum + self.clsNum)
+            if (boxes[k]==np.array([[-1,-1,-1,-1]])).all():
+                target.append(atarget)
+                continue
             box = torch.from_numpy(boxes[k]).to(self.device)
             cls = torch.from_numpy(clses[k]).to(self.device)
             pred = preds[k]
 
-            atarget = torch.zeros(self.gride[0], self.gride[1], 5 * self.boxNum + self.clsNum)
+
             cxcy = box[:, :2] + box[:, 2:] / 2
             wh = box[:, 2:]
             for i in range(cxcy.size()[0]):  # 遍历每个图片的box

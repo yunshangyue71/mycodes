@@ -38,8 +38,17 @@
 	一个box， 对应多个predbox 中iou最大的那个，
 	如果一个cell 被一个obj占用， 后续的obj只有比他大才能进去
 	使用条件概率作为label
+### 2021.4.3
+####
+	添加background这种图片， 来减少false positive
+	添加的时候错了， bbox经过 letter box 后不是-1，-1，-1，-1了，所以无法用这个判断背景了
+	false positive 还是很多， 将noobj 损失系数加大到0.5，之前是0.05
+	发现好多false positive 	，noobj 改为0.1
+#### 16  not overfit maybe something wrong
 ### 待做 
 	变为20类的detect
 	map查看效果，val的脚本
 	tensorboard 记录，将背景图片添加到训练集，
 	代码优化， 测试一张图片的脚本
+	 
+	z zzzzzz

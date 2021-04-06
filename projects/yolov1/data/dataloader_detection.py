@@ -6,7 +6,7 @@ import cv2
 from data.imgaug_wo_shape import ImgAugWithoutShape
 from data.imgaug_w_shape import ImgAugWithShape
 from data.resize_uniform import resizeUniform
-from VOCdataset import vocAnnoPathes, parseVoc
+
 """
 一个image一个anno.txt
 imageName.txt 
@@ -25,27 +25,41 @@ class ListDataset(Dataset):
                  netInputSizehw,
                  imgChannelNumber,
                  augFlag=False,
-                 normalize = None
+                 clsname = {0: "person"}
                  ):
+
         self.trainAnnoPath = trainAnnoPath
         self.trainImgPath = trainImgPath
         self.netInputSizehw = tuple(netInputSizehw)
-        self.annNames = os.listdir(self.trainAnnoPath)[:] # format me
-        # self.annNames = vocAnnoPathes(vocTrainPath)[:28]             # format voc
-        self.normalize = np.array(normalize)
+        self.annNames = ["2008_000176.txt"]#os.listdir(self.trainAnnoPath)[:109] # format me
         self.imgChannelNumber = imgChannelNumber
         self.augFlag = augFlag
-        self.showFlag = 0
+        self.clsname = clsname
+        self.showFlag = 1
 
     def __getitem__(self, index):
         """bbox img org"""
         txtPath = self.trainAnnoPath + self.annNames[index]
-        infos = np.loadtxt(txtPath)                       #format me
-        #infos = parseVoc(txtPath)                           #format voc
-        infos = np.array(infos, dtype=np.float32).reshape(-1, 5)
+
+        """load infos"""
+        infos = np.loadtxt(txtPath)
+        if infos.ndim == 1:
+            rows = infos.shape[0]
+            infos = infos.reshape(-1, rows) #one row to 2dim
+
+        """change int to float"""
+        infos = np.array(infos, dtype=np.float32)
+
+        """判断是不是背景图片"""
+        if (infos ==np.array([[-1,-1,-1,-1,-1]])).all():
+            bgFlag = True
+        else:
+            bgFlag = False
 
         bboxes = infos[:, :4]
-        classes = infos[:, 4:]
+        classes = infos[:, 4]
+
+        """input img rgb or gray"""
         if self.imgChannelNumber == 3:
             img = cv2.imread(self.trainImgPath + self.annNames[index].split('.')[0] + '.jpg')# cv2.COLOR_BGR2RGB)
             # img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
@@ -62,28 +76,38 @@ class ListDataset(Dataset):
         if self.showFlag:
             self.__show(np.copy(img).astype(np.uint8), bboxes, classes, winName+"_resize", color=(0, 0, 255))
 
+        """data shape augment"""
         if self.augFlag:
             """Img Aug With Shape, 放射变换的增强一定要放在前面，主要是0的情况"""
             bboxes[:, 2:] = bboxes[:, :2] + bboxes[:, 2:] # (x1,y1, w,h)->(x1,y1, x2,y2)
-            imgauger = ImgAugWithShape(img, bboxes)
+            if bgFlag:
+                imgauger = ImgAugWithShape(img, None)
+            else:
+                imgauger = ImgAugWithShape(img, bboxes)
             imgauger.shear(5, prob =0.3)
             imgauger.translate(translate=0.1, prob=0.3)
-            img, bboxes = (imgauger.img, imgauger.boxes)
+            if not bgFlag:
+                img, bboxes = (imgauger.img, imgauger.boxes)
+            else:
+                img = imgauger.img
             bboxes[:, 2:] = bboxes[:, 2:] - bboxes[:, :2]  # (x1,y1, x2,y2)->(x1,y1, w,h)
             if self.showFlag:
                 self.__show(np.copy(img).astype(np.uint8), bboxes, classes, winName + "_augshape", color=(0, 0, 255))
 
+        """data color augment"""
+        if self.augFlag:
             """非放射变换，放在最后， 最后的img 不用clip到（0，1）之间"""
             imgauger = ImgAugWithoutShape(img)
-            imgauger.brightness()
-            imgauger.constrast()
-            imgauger.saturation()
+            imgauger.brightness(delta = 0.1, prob = 0.5)
+            imgauger.constrast(alphaLow=0.9, alphaUp=1.1, prob = 0.5)
+            imgauger.saturation(alphaLow=0.1, alphaUp=1.1, prob = 0.5)
             #imgauger.normalize1(mean = self.normalize[0], std= self.normalize[1])
             img = imgauger.img
             if self.showFlag:
                 self.__show(np.copy(img).astype(np.uint8), bboxes, classes, winName + "_augcolor", color=(0, 0, 255))
 
-        if self.showFlag:
+        """see out put size"""
+        if self.showFlag :
             outwh = (7,7)
             self.__show(np.copy(cv2.resize(img,(outwh[0], outwh[1]))).astype(np.uint8),
                         bboxes, classes, winName + "_augoutlayer",
@@ -93,8 +117,12 @@ class ListDataset(Dataset):
             cv2.waitKey()
             #cv2.destroyAllWindows()
 
+        # make dim == 3
         if self.imgChannelNumber == 1:
             img = img[:, :, np.newaxis]
+
+        if bgFlag:
+            bboxes = np.array([[-1,-1,-1,-1]])
         """return 两种return可供选择"""
         img = img.transpose(2, 0, 1)  # 因为pytorch的格式是CHW
         meta = dict(images=torch.from_numpy(img.astype(np.float32)),
@@ -115,6 +143,7 @@ class ListDataset(Dataset):
 
     def __show(self, img, bboxes,classes, winName, color):
         assert bboxes.shape[0] == classes.shape[0], "bboxes number not equal classes number!"
+            # print("")
         for i in range(bboxes.shape[0]):
             cv2.rectangle(img, tuple((int(bboxes[i][0]), int(bboxes[i][1]))),
                           tuple((int(bboxes[i][0]) + int(bboxes[i][2]),
@@ -124,7 +153,8 @@ class ListDataset(Dataset):
                                  int(bboxes[i][1]) + int(bboxes[i][3]/2))),
                           2,color, -1)
         for j in range(classes.shape[0]):
-            cv2.putText(img, str(classes[j]), (int(bboxes[j][0]), int(bboxes[j][1])), 1, 1, color)
+            cv2.putText(img, self.clsname[int(classes[j])], (int(bboxes[j][0]), int(bboxes[j][1]+20)), 1, 1, color)
         cv2.imshow(winName, img)
+
 if __name__ == '__main__':
     pass

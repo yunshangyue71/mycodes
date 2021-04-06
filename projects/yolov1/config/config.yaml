@@ -1,3 +1,7 @@
+clsname : {-1: "background", 0: 'aeroplane', 1: 'bicycle', 2: 'bird',3: 'boat',4: 'bottle',5: 'bus',
+           6: 'car',7: 'cat',8: 'chair',9: 'cow',10: 'diningtable',
+           11: 'dog',12: 'horse',13: 'motorbike',14: 'person',
+           15: 'pottedplant',16: 'sheep',17: 'sofa',18: 'train',19: 'tvmonitor'}
 dir:
 #  trainImgDir: 'D:/data/m2nist/minist_pics/'
 #  trainAnnoDir: 'D:/data/m2nist/format_me/train_annotation/'
@@ -6,35 +10,38 @@ dir:
 #  trainAnnoDir: '/media/q/deep/me/data/0digit/m2nist/format_me/train_annotation/'
 #  valAnnoDir: '/media/q/deep/me/data/0digit/m2nist/format_me/val_annotation/'
 
-  trainImgDir: "/media/q/data/datasets/VOC/VOC2012/JPEGImages/"
-  trainAnnoDir: "/media/q/data/datasets/VOC/VOC2012/format_me/Main/person/train/"
-  valImgDir: "/media/q/data/datasets/VOC/VOC2007_test/JPEGImages/"
-  valAnnoDir: "/media/q/data/datasets/VOC/VOC2007_test/format_me/Main/person/train/"
+  trainImgDir: "/media/q/data/datasets/VOC/VOC127/JPEGImages/"
+  trainAnnoDir: "/media/q/data/datasets/VOC/VOC127/format_me/Main/all/trainval_diff1/"
+  valImgDir: "/media/q/data/datasets/VOC/VOC127/JPEGImages/"
+  valAnnoDir: "/media/q/data/datasets/VOC/VOC127/format_me/Main/all/trainval_diff1/"
+  # valImgDir: "/media/q/data/datasets/VOC/VOC2007_test/JPEGImages/"
+  # valAnnoDir: "/media/q/data/datasets/VOC/VOC2007_test/format_me/Main/all/trainval_diff1/"
   modelSaveDir: '/media/q/deep/me/model/yolov1/'
-  modelName : '100.pth'
-  modelReloadFlag: 1
+  modelName : '25b.pth'
+  modelReloadFlag: 0
 data:
-  augment: True
+  augment: 0
   normalize: [[103.53, 116.28, 123.675], [57.375, 57.12, 58.395]] #[mean, std]
   imgChannelNumber: 3
+  shuffle: 0
 model:
   netInput: (448, 448)
   featSize: (7, 7)
   stride : 64
-  clsNum: 1
-  bboxPredNum: 2
+  clsNum: 20
+  bboxPredNum: 1
   imgChannelNumber: 3
 loss:
-  noobj: 0.05
+  noobj: 0.5
   obj: 1
 
   cls: 1
-  conf: 3
+  conf: 2
   box: 5
   l2: 0.0005
 train:
-  workers: 4
-  batchSize: 16
+  workers: 0
+  batchSize: 1
   epoch: 300
 
   l2: 0.0005

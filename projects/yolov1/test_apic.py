@@ -4,27 +4,30 @@ from config.config import load_config, cfg
 from net.resnet import ResNet, ResnetBasic,ResnetBasicSlim
 from utils.nms_np_simple import nms
 from dataY.yolov1_dataY import DataY
-
+from net.yolov1 import YOLOv1
 import numpy as np
 import cv2
 from loss.yololoss import yoloLoss
 from dataY.yolov1_dataY import DataY
 
 import torch
-
+clsname = {0:'aeroplane', 1:'bicycle', 2:'bird',3:'boat',4:'bottle',5:'bus',
+           6:'car',7:'cat',8:'chair',9:'cow',10:'diningtable',
+           11:'dog',12:'horse',13:'motorbike',14:'person',
+           15:'pottedplant',16:'sheep',17:'sofa',18:'train',19:'tvmonitor'}
 if __name__ == '__main__':
     """config"""
     load_config(cfg, "./config/config.yaml")
     print(cfg)
     device = torch.device('cuda:0')
 
-    scoreThresh = 0.35
-    iouThresh = 0.2
+    scoreThresh = 0.
+    iouThresh = 0.3
 
     """dataset"""
     trainData = ListDataset(trainAnnoPath=cfg.dir.valAnnoDir, trainImgPath=cfg.dir.valImgDir,
                             netInputSizehw=cfg.model.netInput, augFlag=False,
-                            normalize=cfg.data.normalize, imgChannelNumber=cfg.model.imgChannelNumber)
+                             clsname = cfg.clsname, imgChannelNumber=cfg.model.imgChannelNumber)
     trainLoader = torch.utils.data.DataLoader(
         trainData,
         collate_fn=collate_function,
@@ -46,6 +49,7 @@ if __name__ == '__main__':
                      [3,4,6,3],
                      channel_in=cfg.data.imgChannelNumber,
                      channel_out=(cfg.model.bboxPredNum * 5 + cfg.model.clsNum))
+    # network = YOLOv1(params={"dropout": 0.5, "num_class": cfg.model.clsNum})
     network.to(device)
     if 1:
         weights = torch.load(cfg.dir.modelSaveDir + cfg.dir.modelName)  # 加载参数
@@ -53,6 +57,7 @@ if __name__ == '__main__':
 
     with torch.no_grad():
         for id, infos in enumerate(trainLoader):
+            if id%100 == 0: print(id)
             # if id != 7: continue
             """forward and pred"""
             imgs_ = infos['images']
@@ -108,7 +113,7 @@ if __name__ == '__main__':
 
                 cy = (hid + deltay) * cfg.model.stride
                 cx = (wid + deltax) * cfg.model.stride
-                w  = w * cfg.model.netInput[1]
+                w  = w* cfg.model.netInput[1]
                 h = h * cfg.model.netInput[0]
 
                 c = np.argmax(clsVec)
@@ -120,86 +125,22 @@ if __name__ == '__main__':
             dets[:, :2] -= dets[:, 2:4] / 2
             dets[:, 2:4] += dets[:, :2]
             dets = nms(dets, iouThresh)
+            dett = np.copy(dets)
+            dett[:,2:4] -= dett[:, :2]
+            dett[:, 4:] = dett[:, 5:3:-1]
+            # np.savetxt("/media/q/data/datasets/VOC/VOC2007_test/format_me/Main/person/result/" + infos["annoName"][0],dett )
             for i in range(dets.shape[0]):
                 x1, y1, x2, y2, score, cls  = dets[i][0],dets[i][1], dets[i][2],dets[i][3], dets[i][4],dets[i][5],
                 cv2.rectangle(image, (int(x1), int(y1)),(int(x2), int(y2)),
                               (0,0,255), 2)
                 cv2.circle(image, (int((x1+x2)/2), int((y2+y1)/2)), color=(0,0,255),radius=2, thickness=-1)
-                cv2.putText(image, "score: "+str(round(score,3)), (int(x1), int(y1)),1,1,(0,0,255))
-                cv2.putText(image, "cls: " + str(int(cls)), (int(x1), int(y1+15)), 1, 1, (0, 0, 255))
-            for li in range(cfg.model.featSize[0]):
-                cv2.line(image, (int(li * cfg.model.stride), 0),(int(li * cfg.model.stride),int(cfg.model.netInput[1])),  (0,255,0),1)
-
-            for li in range(cfg.model.featSize[1]):
-                cv2.line(image, (0, int(li * cfg.model.stride)),
-                         (int(cfg.model.netInput[1]), int(li * cfg.model.stride)),  (0, 255, 0),1)
-            cv2.imshow("", image)
+                cv2.putText(image, "s: "+str(round(score,3)), (int(x1), int(y1)),1,1,(0,0,255))
+                cv2.putText(image, "c: " + clsname[cls], (int(x1), int(y1+15)), 1, 1, (0, 0, 255))
+            # for li in range(cfg.model.featSize[0]):
+            #     cv2.line(image, (int(li * cfg.model.stride), 0),(int(li * cfg.model.stride),int(cfg.model.netInput[1])),  (0,255,0),1)
+            #
+            # for li in range(cfg.model.featSize[1]):
+            #     cv2.line(image, (0, int(li * cfg.model.stride)),
+            #              (int(cfg.model.netInput[1]), int(li * cfg.model.stride)),  (0, 255, 0),1)
+            cv2.imshow("test", image)
             cv2.waitKey()
-
-# savePath =cfg.dir.modelSaveDir + '15.pth'
-# weights = torch.load(savePath)#加载参数
-# network.load_state_dict(weights)#给自己的模型加载参数
-# with torch.no_grad():
-#
-#     for id, infos in enumerate(trainLoader):
-#         """forward and pred"""
-#         imgs = infos['images']
-#         bboxesGt = infos['bboxesGt']
-#         classesGt = infos['classes']
-#         imgs = imgs.to(device).float()
-#         bboxesPred, classesPred = network(imgs)
-#
-#         mlvl_bboxes = []
-#         mlvl_scores = []
-#         for level in range(headerNum):
-#             feath, featw = featSizes[level]
-#             clspred = classesPred[level].sigmoid()
-#             boxpred = bboxesPred[level]
-#             boxpred = BoxesDistribution(reg_max=bboxPredNum)(boxpred)*strides[level]
-#
-#             pointsx = torch.arange(0, featw, device=device).repeat(feath).reshape(feath, featw).to(device)
-#             pointsy = torch.arange(0, feath, device=device).repeat(featw).reshape(featw, feath).to(device)
-#             pointsy = pointsy.t()
-#             points = torch.stack((pointsx, pointsy), dim=2).reshape(-1, 2).repeat(batchSize, 1, 1).reshape(-1, 2) * strides[
-#                 level]
-#             bboxesPredOne = distance2bbox(points, boxpred)
-#
-#             mlvl_bboxes.append(bboxesPredOne)
-#             mlvl_scores.append(clspred.reshape(featw*feath, -1))
-#         mlvl_bboxes = torch.cat(mlvl_bboxes, 0)
-#         mlvl_scores = torch.cat(mlvl_scores, 0)
-#
-#         padding = mlvl_scores.new_zeros(mlvl_scores.shape[0], 1)
-#         mlvl_scores = torch.cat([mlvl_scores, padding], dim=1)
-#         det_bboxes, det_labels = multiclass_nms(
-#             mlvl_bboxes,
-#             mlvl_scores,
-#             score_thr=0.20,
-#             nms_cfg=dict(type='nms', iou_threshold=0.4),
-#             max_num=100)
-#         showFlag = 1
-#         if showFlag:
-#             for i in range(1):
-#                 image = torch.clone(imgs[i])
-#                 image = image.to('cpu').numpy()#*255
-#                 image = image.transpose(1, 2, 0)
-#                 image = image.astype(np.uint8)
-#                 image = cv2.UMat(image).get()
-#                 det_bboxes = det_bboxes.to('cpu').numpy()
-#                 det_labels = det_labels.to('cpu').numpy()
-#
-#                 for j in range(det_bboxes.shape[0]):
-#                     if det_bboxes[j][-1]> 0.5:
-#                         box = det_bboxes[j]
-#                         cls = det_labels[j]
-#                         cv2.rectangle(image, (max(0, box[0]), max(0, box[1])), (max(0, box[2]), max(0, box[3])), (0,255,0))
-#                         cv2.putText(image,str(cls)+'-'+str(det_bboxes[j][-1]),
-#                                     (max(0, box[0]), max(0, box[1])),1,2,(0,0,255))
-#                         print(cls)
-#                 #imsavePath = '/media/q/deep/me/model/pytorch_predict_' + str(id) + '.jpg'
-#                 # print(imsavePath)
-#                 #cv2.imwrite(imsavePath, image)
-#                 cv2.imshow('img', image)
-#
-#                 cv2.waitKey()
-#             print("show anghor box gt")
