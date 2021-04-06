@@ -18,83 +18,57 @@ class DataY(object):
         self.clsNum = clsNum
 
         self.gride = gride
-        self.inputHW = torch.from_numpy(np.array(inputHW)).to(device)
+        self.inputHW = np.array(inputHW)
         self.stride = stride
         assert inputHW[0] / gride[0] == stride and inputHW[1] / gride[1] == stride, "please check the shape"
-
         self.device = device
+
     #box:B, (x1, y1, w, h)
     #cls:(B, N)
-    def do(self, boxes, clses):
-        b = len(boxes)
-        target = []
-        for k in range(b): # 遍历batch
-            box = torch.from_numpy(boxes[k]).to(self.device)
-            cls = torch.from_numpy(clses[k]).to(self.device)
-
-            atarget = torch.zeros(self.gride[0], self.gride[1], 5 * self.boxNum + self.clsNum)
-            cxcy = box[:, :2] + box[:, 2:] / 2
-            wh = box[:, 2:]
-            for i in range(cxcy.size()[0]):# 遍历每个图片的box
-                cxcyi = cxcy[i]
-                whi = wh[i]
-                ij = (cxcyi / self.stride).ceil() - 1   # 判断在哪一个gride 里面  # 必须使得stride 是wh， 否则输入wh不相等会有问题
-                xy = cxcyi / self.stride - ij           # 距离gride 左上角的距离， gride 表示单位长度
-                whi = whi / self.inputHW                # 物体宽度是图片的比例
-                clsi = cls[i]
-
-
-                for j in range(self.boxNum):
-                    atarget[int(ij[1]), int(ij[0]), (0 + 5 * j) : (1 + 5 * j + 1)] = xy
-                    atarget[int(ij[1]), int(ij[0]), (2 + 5 * j) : (3 + 5 * j + 1)] = whi
-                    atarget[int(ij[1]), int(ij[0]), 4 + 5 * j] = 1
-
-                atarget[int(ij[1]), int(ij[0]), int(clsi + 5 * self.boxNum)] = torch.ones(1)
-            target.append(atarget)
-        target = torch.stack(target, dim=0)
-
-        return target.to(self.device)
-
     def do2(self, boxes, clses, preds):
         preds = preds.permute(0, 2, 3, 1)
-        b = len(boxes)
         target = []
-        for k in range(b):  # 遍历batch
+        for k in range(len(boxes)):  # 遍历batch 的每个图片
             atarget = torch.zeros(self.gride[0], self.gride[1], 5 * self.boxNum + self.clsNum)
             if (boxes[k]==np.array([[-1,-1,-1,-1]])).all():
                 target.append(atarget)
                 continue
-            box = torch.from_numpy(boxes[k]).to(self.device)
-            cls = torch.from_numpy(clses[k]).to(self.device)
-            pred = preds[k]
+            # boxt = torch.from_numpy(boxes[k]).to(self.device)
+            # clst = torch.from_numpy(clses[k]).to(self.device)
+            # cxcyt = boxt[:, :2] + boxt[:, 2:] / 2
+            # wht = boxt[:, 2:]
+            # boxxyxyt = boxt[:, :2] + boxt[:, 2:]
+            # pred = preds[k]
 
+            for i in range(boxes[k].shape[0]):  # 遍历图片的每个box, 看这个box 落在哪里
+                boxt = boxes[k][i]
+                boxxyxyt = np.copy(boxt)
+                boxxyxyt[2:] += boxxyxyt[:2]
+                cxcyt = boxt[:2] + boxt[2:]/2
+                wht = boxt[2:]
 
-            cxcy = box[:, :2] + box[:, 2:] / 2
-            wh = box[:, 2:]
-            for i in range(cxcy.size()[0]):  # 遍历每个图片的box
-                cxcyi = cxcy[i]
-                whi = wh[i]
-                ij = (cxcyi / self.stride).ceil() - 1  # 判断在哪一个gride 里面  # 必须使得stride 是wh， 否则输入wh不相等会有问题
-                xy = cxcyi / self.stride - ij  # 距离gride 左上角的距离， gride 表示单位长度
-                whi = whi / self.inputHW  # 物体宽度是图片的比例
-                clsi = cls[i]
+                #用于寻找 loacte 以及制作vector
+                ij = np.ceil(cxcyt / self.stride) - 1  # 判断在哪一个gride 里面  # 必须使得stride 是wh， 否则输入wh不相等会有问题
+                xy = cxcyt / self.stride - ij  # 距离gride 左上角的距离， gride 表示单位长度
+                wht = wht / self.inputHW[::-1]  # 物体宽度是图片的比例
+                clst = clses[k][i]
 
                 # 计算pred 和这个 box的 iou， 看看和那个pred box iou最大
-                x1t = box[i][0]
-                y1t = box[i][1]
-                x2t = box[i][0] + box[i][2]
-                y2t = box[i][1] + box[i][3]
+                x1t = boxxyxyt[0]
+                y1t = boxxyxyt[1]
+                x2t = boxxyxyt[2]
+                y2t = boxxyxyt[3]
 
-
+                """判断这个box 可以locate在哪里，
+                判断逻辑是：
+                这个box 和pred 多个box 里面哪个box的iou最大， 选中他
+                """
                 choiceBoxId = 0 #每个box 在pred多个box里面只有iou最大的那个才是针织
                 maxIou = 0
                 for j in range(self.boxNum):
-                    try:
-                        xywhc  = pred[int(ij[1]),int(ij[0]),j*5:j*5+5]
-                    except:
-                        print("")
+                    xywhc  = preds[k][int(ij[1]),int(ij[0]),j*5:j*5+5]
                     cxp = (int(ij[0]) + xywhc[0])*self.stride
-                    cyp = (int(ij[1] )+ xywhc[1])*self.stride
+                    cyp = (int(ij[1]) + xywhc[1])*self.stride
                     wp = xywhc[2] * self.inputHW[1]
                     hp = xywhc[3] * self.inputHW[0]
                     x1p = cxp - wp/2
@@ -103,25 +77,27 @@ class DataY(object):
                     y2p = cyp + hp/2
 
                     union = max((x2t-x1t),0)*max((y2t-y1t),0) + max((y2p-y1p), 0) * max((x2p-x1p), 0)
-                    #max(max(x2p, x2t) - min(x1p, x1t), 0)* max(max(y2p, y2t) - min(y1p, y1t), 0)
 
                     inter = max(min(x2p, x2t) - max(x1p, x1t), 0)* max(min(y2p, y2t) - max(y1p, y1t),0)
-                    iou = inter/(union-inter)
+                    iou = inter / (union-inter)
                     if iou > maxIou:
                         maxIou = iou
                         choiceBoxId = j
 
-                #看看对应cell最大的置信度是多少， 如果超过他那么就替换他， 如果没有超过就舍弃这个box
+                """
+                图片的这个box 和 第choiceBoxId个pred box的 iou 是否比之前的大， 这样依然可能是两个
+                """
                 maxIoubefore = 0
                 for j in range(self.boxNum):
                     if atarget[int(ij[1]), int(ij[0]), 4 + 5 * j] > maxIoubefore:
                         maxIoubefore = atarget[int(ij[1]), int(ij[0]), 4 + 5 * j]
                 if maxIou > maxIoubefore:
-                    atarget[int(ij[1]), int(ij[0]), (0 + 5 * choiceBoxId): (1 + 5 * choiceBoxId + 1)] = xy
-                    atarget[int(ij[1]), int(ij[0]), (2 + 5 * choiceBoxId): (3 + 5 * choiceBoxId + 1)] = whi
+                    atarget[int(ij[1]), int(ij[0]), (0 + 5 * choiceBoxId): (1 + 5 * choiceBoxId + 1)] = torch.from_numpy(xy).to(self.device)
+                    atarget[int(ij[1]), int(ij[0]), (2 + 5 * choiceBoxId): (3 + 5 * choiceBoxId + 1)] = torch.from_numpy(wht).to(self.device)
+
                     atarget[int(ij[1]), int(ij[0]), 4 + 5 * choiceBoxId] = maxIou
 
-                    atarget[int(ij[1]), int(ij[0]), int(clsi + 5 * self.boxNum)] = maxIou
+                    atarget[int(ij[1]), int(ij[0]), int(clst + 5 * self.boxNum)] = maxIou
             target.append(atarget)
         target = torch.stack(target, dim=0)
 

@@ -21,7 +21,7 @@ if __name__ == '__main__':
     print(cfg)
     device = torch.device('cuda:0')
 
-    scoreThresh = 0.
+    scoreThresh = 0.1
     iouThresh = 0.3
 
     """dataset"""
@@ -51,9 +51,10 @@ if __name__ == '__main__':
                      channel_out=(cfg.model.bboxPredNum * 5 + cfg.model.clsNum))
     # network = YOLOv1(params={"dropout": 0.5, "num_class": cfg.model.clsNum})
     network.to(device)
-    if 1:
-        weights = torch.load(cfg.dir.modelSaveDir + cfg.dir.modelName)  # 加载参数
-        network.load_state_dict(weights)  # 给自己的模型加载参数
+    savedDict = torch.load(cfg.dir.modelSaveDir + cfg.dir.modelName)  # 加载参数
+    weights = savedDict['savedModel']
+    startEpoch = savedDict['epoch']
+    network.load_state_dict(weights)  # 给自己的模型加载参数
 
     with torch.no_grad():
         for id, infos in enumerate(trainLoader):
@@ -113,8 +114,8 @@ if __name__ == '__main__':
 
                 cy = (hid + deltay) * cfg.model.stride
                 cx = (wid + deltax) * cfg.model.stride
-                w  = w* cfg.model.netInput[1]
-                h = h * cfg.model.netInput[0]
+                w  = w* w*cfg.model.netInput[1]
+                h = h * h*cfg.model.netInput[0]
 
                 c = np.argmax(clsVec)
 

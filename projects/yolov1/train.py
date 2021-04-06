@@ -11,7 +11,6 @@ from torch.utils.data import SubsetRandomSampler
 import numpy as np
 
 import torch
-from torch import optim
 from torch import nn
 import math
 
@@ -60,8 +59,11 @@ if __name__ == '__main__':
                      channel_out=(cfg.model.bboxPredNum * 5 + cfg.model.clsNum))
     # network = YOLOv1(params={"dropout": 0.5, "num_class": cfg.model.clsNum})
     network.to(device)
+    startEpoch = 1
     if cfg.dir.modelReloadFlag:
-        weights = torch.load(cfg.dir.modelSaveDir + cfg.dir.modelName)  # 加载参数
+        savedDict = torch.load(cfg.dir.modelSaveDir + cfg.dir.modelName)  # 加载参数
+        weights =  savedDict['savedModel']
+        startEpoch = savedDict['epoch']
         network.load_state_dict(weights)  # 给自己的模型加载参数
 
     """指定loss"""
@@ -76,13 +78,17 @@ if __name__ == '__main__':
 
     """其余"""
     optimizer = torch.optim.Adam(network.parameters(), lr=cfg.train.lr0)
+    # optimizer = torch.optim.SGD(network.parameters(), lr=cfg.train.lr0)
     # scheduler = optim.lr_scheduler.ReduceLROnPlateau(optimizer, mode='min', patience=cfg.train.lrPatience)
-    warmUpFlag = True if cfg.train.warmupBatch is not None else False
+    if cfg.train.warmupBatch is not None and not cfg.dir.modelReloadFlag:# reload  not warmup
+        warmUpFlag = True
+    else:
+        warmUpFlag = False
     warmUpIter = 0
 
     """start to train """
     batchNum = len(trainLoader) * cfg.train.epoch
-    for e  in range(cfg.train.epoch):
+    for e  in range(startEpoch, cfg.train.epoch):
         """set lr"""
         if not warmUpFlag:
             lr = (cfg.train.lr0 * (pow(cfg.train.lrReduceFactor, (e) // cfg.train.lrReduceEpoch)))
@@ -139,13 +145,17 @@ if __name__ == '__main__':
                 lsBox = torch.clone(lsInfo['box']).to('cpu').numpy()
                 lsCls = torch.clone(lsInfo['cls']).to('cpu').numpy()
                 if id % 30 == 0:
-                    print("[bc:{}/{} e: {}/{} total_bc:{} per:{:1f}%]".\
+                    print("[bc:{}/{} e: {}/{} total_bc:{} per:{:.3f}%]".\
                           format(id,len(trainLoader), e,cfg.train.epoch, batchNum,
-                                 float(e*len(trainLoader)+e + id+1)*100/batchNum),
-                          " loss:%.4f" % lossS, " lsConf:%.4f"% lsConf, " lsCls:%.4f"% lsCls, " lsBox:%.4f"% lsBox,
+                                 float(e*len(trainLoader) + id+1)*100/batchNum ),
+                          " loss:%.4f" % lossS, " lsConf:%.4f"% lsConf, " lsCls:%.4f"% lsCls, " lsBox:%.4f"% lsBox,"l2:%.4f"%l2,
                           " lr:%.7f"%lr)
 
         if e % 1 == 0:
             """参数"""
             savePath = cfg.dir.modelSaveDir + str(e) + 'b.pth'
-            torch.save(network.state_dict(), savePath)  # save
+            saveDict = {"savedModel":network.state_dict(),
+                        "epoch":e,
+                        }
+            # torch.save(network.state_dict(), savePath)  # save
+            torch.save(saveDict, savePath)

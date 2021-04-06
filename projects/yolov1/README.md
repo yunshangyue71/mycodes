@@ -45,6 +45,8 @@
 	false positive 还是很多， 将noobj 损失系数加大到0.5，之前是0.05
 	发现好多false positive 	，noobj 改为0.1
 #### 16  not overfit maybe something wrong
+### 2021.4.6
+	lr stage , can deel this problem , when this model trained well , the l2 is not big 
 ### 待做 
 	变为20类的detect
 	map查看效果，val的脚本

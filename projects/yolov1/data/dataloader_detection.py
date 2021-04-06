@@ -31,11 +31,11 @@ class ListDataset(Dataset):
         self.trainAnnoPath = trainAnnoPath
         self.trainImgPath = trainImgPath
         self.netInputSizehw = tuple(netInputSizehw)
-        self.annNames = ["2008_000176.txt"]#os.listdir(self.trainAnnoPath)[:109] # format me
+        self.annNames = os.listdir(self.trainAnnoPath) # format me#["2008_000176.txt"]
         self.imgChannelNumber = imgChannelNumber
         self.augFlag = augFlag
         self.clsname = clsname
-        self.showFlag = 1
+        self.showFlag = 0
 
     def __getitem__(self, index):
         """bbox img org"""
