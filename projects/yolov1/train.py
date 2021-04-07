@@ -9,14 +9,16 @@ from loss.L1L2loss import Regularization
 
 from torch.utils.data import SubsetRandomSampler
 import numpy as np
-
 import torch
 from torch import nn
-import math
+import torchvision.utils as vutils
+from tensorboardX import SummaryWriter
+import time
 
 if __name__ == '__main__':
     """config"""
-    load_config(cfg, "./config/config.yaml")
+    cfgpath = "./config/config.yaml"
+    load_config(cfg, cfgpath)
     print(cfg)
     device = torch.device('cuda:0')
 
@@ -63,7 +65,7 @@ if __name__ == '__main__':
     if cfg.dir.modelReloadFlag:
         savedDict = torch.load(cfg.dir.modelSaveDir + cfg.dir.modelName)  # 加载参数
         weights =  savedDict['savedModel']
-        startEpoch = savedDict['epoch']
+        startEpoch = savedDict['epoch']+1
         network.load_state_dict(weights)  # 给自己的模型加载参数
 
     """指定loss"""
@@ -76,20 +78,36 @@ if __name__ == '__main__':
                      lsBox=cfg.loss.box
                      )
 
-    """其余"""
+    """optimizer"""
     optimizer = torch.optim.Adam(network.parameters(), lr=cfg.train.lr0)
     # optimizer = torch.optim.SGD(network.parameters(), lr=cfg.train.lr0)
     # scheduler = optim.lr_scheduler.ReduceLROnPlateau(optimizer, mode='min', patience=cfg.train.lrPatience)
+
+    """lr warm up"""
     if cfg.train.warmupBatch is not None and not cfg.dir.modelReloadFlag:# reload  not warmup
         warmUpFlag = True
     else:
         warmUpFlag = False
     warmUpIter = 0
+    warmUpBatch = min(cfg.train.warmupBatch,len(trainLoader))# set the warmup batch num up limit
+
+    """log """
+    logtime = time.asctime(time.localtime(time.time()))
+    logdir = cfg.dir.logSaveDir + "start_epoch_" + str(startEpoch) + " time_"+str(logtime) +  "/"
+    writer = SummaryWriter(logdir)
+    addGraphFlag = True
+    addImgFlag = True
+    addCofigFlag = True
+    """打开 
+    tensorboard - -logdir
+    runs
+    打开
+    localhost: 6006"""
 
     """start to train """
     batchNum = len(trainLoader) * cfg.train.epoch
     for e  in range(startEpoch, cfg.train.epoch):
-        """set lr"""
+        """set decay lr"""
         if not warmUpFlag:
             lr = (cfg.train.lr0 * (pow(cfg.train.lrReduceFactor, (e) // cfg.train.lrReduceEpoch)))
             for param_group in optimizer.param_groups:
@@ -98,9 +116,9 @@ if __name__ == '__main__':
         for id, infos in enumerate(trainLoader):
             """warmup"""
             if warmUpFlag:
-                if warmUpIter < cfg.train.warmupBatch:
-                    lr = cfg.train.warmupLr0 + cfg.train.lr0 * (warmUpIter) / cfg.train.warmupBatch
-                elif warmUpIter == cfg.train.warmupBatch:
+                if warmUpIter < warmUpBatch:
+                    lr = cfg.train.warmupLr0 + cfg.train.lr0 * (warmUpIter) / warmUpBatch
+                elif warmUpIter == warmUpBatch:
                     lr = cfg.train.lr0
                     warmUpFlag = False
                 for param_group in optimizer.param_groups:
@@ -108,10 +126,10 @@ if __name__ == '__main__':
                 warmUpIter += 1
 
             """dataX"""
-            imgs = infos['images'].to(device).float()
+            images = infos['images'].to(device).float()
             mean = torch.tensor(cfg.data.normalize[0]).cuda().reshape(3, 1, 1)
             std = torch.tensor(cfg.data.normalize[1]).cuda().reshape(3, 1, 1)
-            imgs = (imgs - mean) / std
+            imgs = (images - mean) / std
 
             """pred"""
             pred = network(imgs)
@@ -145,11 +163,50 @@ if __name__ == '__main__':
                 lsBox = torch.clone(lsInfo['box']).to('cpu').numpy()
                 lsCls = torch.clone(lsInfo['cls']).to('cpu').numpy()
                 if id % 30 == 0:
+                    niter = e*len(trainLoader) + id+1
                     print("[bc:{}/{} e: {}/{} total_bc:{} per:{:.3f}%]".\
                           format(id,len(trainLoader), e,cfg.train.epoch, batchNum,
-                                 float(e*len(trainLoader) + id+1)*100/batchNum ),
+                                 float(niter*100)/batchNum ),
                           " loss:%.4f" % lossS, " lsConf:%.4f"% lsConf, " lsCls:%.4f"% lsCls, " lsBox:%.4f"% lsBox,"l2:%.4f"%l2,
                           " lr:%.7f"%lr)
+
+            """tensorboardX to view"""
+            #loss add per iter
+            writer.add_scalars("loss/scalar_group",
+                               {"loss":loss,"lossConf":lsInfo['conf'],
+                                "lossBox":lsInfo['box'],"lossCls":lsInfo['cls'],
+                                "l2Loss":l2, "lr":lr},niter)
+
+
+            #add graph only once
+            if addGraphFlag:
+                writer.add_graph(network, imgs)
+                addGraphFlag = False
+
+            # add img only once
+            if addImgFlag:
+                x = vutils.make_grid(images, normalize=True, scale_each=False)
+                writer.add_image('Image/origin', x, startEpoch)
+
+                x = vutils.make_grid(imgs, normalize=True, scale_each=False)
+                writer.add_image('Image/normalized/', x, startEpoch)
+
+                addImgFlag = False
+
+            #iadd config to text
+            if addCofigFlag:
+                for key,value in cfg.items():
+                    for k, v in value.items():
+                        writer.add_text(str(key) + "/" + str(k), str(v))
+                addCofigFlag = False
+
+            #add hist per epoch
+            if niter % (len(trainLoader)/2) == 0:
+                for name, param in network.state_dict().items():
+                    writer.add_histogram(name, param.clone().cpu().data.numpy(), id)
+
+            #if need , i can add any 4d tensor  to supervise the value
+
 
         if e % 1 == 0:
             """参数"""

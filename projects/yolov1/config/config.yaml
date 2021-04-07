@@ -1,4 +1,5 @@
-clsname : {-1: "background", 0: 'aeroplane', 1: 'bicycle', 2: 'bird',3: 'boat',4: 'bottle',5: 'bus',
+clsname :
+  {-1: "background", 0: 'aeroplane', 1: 'bicycle', 2: 'bird',3: 'boat',4: 'bottle',5: 'bus',
            6: 'car',7: 'cat',8: 'chair',9: 'cow',10: 'diningtable',
            11: 'dog',12: 'horse',13: 'motorbike',14: 'person',
            15: 'pottedplant',16: 'sheep',17: 'sofa',18: 'train',19: 'tvmonitor'}
@@ -15,16 +16,16 @@ dir:
 #  valAnnoDir: "/media/q/data/datasets/VOC/VOC127/format_me/Main/all/trainval_diff1/"
   valImgDir: "/media/q/data/datasets/VOC/VOC2007_test/JPEGImages/"
   valAnnoDir: "/media/q/data/datasets/VOC/VOC2007_test/format_me/Main/all/trainval_diff1/"
-  modelSaveDir: '/media/q/deep/me/model/'
+  modelSaveDir: '/media/q/deep/me/model/yolov1/weight/'
+  logSaveDir: '/media/q/deep/me/model/yolov1/log/'
 
-
-  modelName : '1b.pth'
-  modelReloadFlag: 0
+  modelName : '23b.pth'
+  modelReloadFlag: 1
 data:
   augment: 0
   normalize: [[103.53, 116.28, 123.675], [57.375, 57.12, 58.395]] #[mean, std]
   imgChannelNumber: 3
-  shuffle: 0
+  shuffle: 1
 model:
   netInput: (448, 448) #hw
   featSize: (7, 7)
@@ -43,7 +44,7 @@ loss:
 train:
   workers: 4
   batchSize: 16
-  lr0: 0.03
+  lr0: 0.003
   warmupLr0: 0.00001
   warmupBatch: 0
 

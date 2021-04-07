@@ -30,6 +30,7 @@ writer.add_text('Text', 'text logged at step:' + str(n_iter), n_iter)
 纵轴 y：每个批次的结果
 横轴 x：表示权重取值为x
 x y 对应的值：第y批次， 权重在x附近的有多少个
+
 distribution
 横轴：第几个批次
 纵轴：权重取值为某个数
@@ -43,7 +44,7 @@ for name, param in network.state_dict().items():
     #配合network， debug 来进行查阅
 
 """add graph"""
-writer.add_graph(network, imgs, verbose=False)
+writer.add_graph(network, imgs, verbose=False)# wheather to print structure in coslue
 
 writer.close()
 

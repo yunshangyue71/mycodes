@@ -79,7 +79,7 @@ if __name__ == '__main__':
             """dataY"""
             bboxesGt = infos['bboxesGt']
             classesGt = infos['classes']
-            target = datay.do(bboxesGt, classesGt)
+            # target = datay.do2(bboxesGt, classesGt)
 
             pred = network(imgs)
 
