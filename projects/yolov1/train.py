@@ -92,8 +92,8 @@ if __name__ == '__main__':
     warmUpBatch = min(cfg.train.warmupBatch,len(trainLoader))# set the warmup batch num up limit
 
     """log """
-    logtime = time.asctime(time.localtime(time.time()))
-    logdir = cfg.dir.logSaveDir + "start_epoch_" + str(startEpoch) + " time_"+str(logtime) +  "/"
+    logtime = time.strftime("%Y-%m-%d_%H-%M-%S",time.localtime())
+    logdir = cfg.dir.logSaveDir + "startEpoch_" + str(startEpoch) + "__Time_"+str(logtime) +  "/"
     writer = SummaryWriter(logdir)
     addGraphFlag = True
     addImgFlag = True
@@ -157,13 +157,13 @@ if __name__ == '__main__':
             # scheduler.step(loss) #可以使其他的指标
 
             """print"""
+            niter = e * len(trainLoader) + id + 1
             with torch.no_grad():
                 lossS = torch.clone(loss).to('cpu').numpy()
                 lsConf = torch.clone(lsInfo['conf']).to('cpu').numpy()
                 lsBox = torch.clone(lsInfo['box']).to('cpu').numpy()
                 lsCls = torch.clone(lsInfo['cls']).to('cpu').numpy()
                 if id % 30 == 0:
-                    niter = e*len(trainLoader) + id+1
                     print("[bc:{}/{} e: {}/{} total_bc:{} per:{:.3f}%]".\
                           format(id,len(trainLoader), e,cfg.train.epoch, batchNum,
                                  float(niter*100)/batchNum ),
@@ -175,7 +175,7 @@ if __name__ == '__main__':
             writer.add_scalars("loss/scalar_group",
                                {"loss":loss,"lossConf":lsInfo['conf'],
                                 "lossBox":lsInfo['box'],"lossCls":lsInfo['cls'],
-                                "l2Loss":l2, "lr":lr},niter)
+                                "l2Loss":l2, "lr":lr}, niter)
 
 
             #add graph only once
@@ -195,15 +195,19 @@ if __name__ == '__main__':
 
             #iadd config to text
             if addCofigFlag:
+                txt =""
                 for key,value in cfg.items():
                     for k, v in value.items():
-                        writer.add_text(str(key) + "/" + str(k), str(v))
+                        txt += str(key) + " " + str(k) +": " + str(v) + "\n"
+                # print(txt)
+                writer.add_text("config", txt)
                 addCofigFlag = False
 
             #add hist per epoch
-            if niter % (len(trainLoader)/2) == 0:
+            if niter % len(trainLoader) == 0:
+            # if niter % 1 == 0:
                 for name, param in network.state_dict().items():
-                    writer.add_histogram(name, param.clone().cpu().data.numpy(), id)
+                    writer.add_histogram(name, param.clone().cpu().data.numpy(), int(niter / len(trainLoader)))
 
             #if need , i can add any 4d tensor  to supervise the value
 

@@ -47,6 +47,8 @@
 #### 16  not overfit maybe something wrong
 ### 2021.4.6
 	lr stage , can deel this problem , when this model trained well , the l2 is not big 
+### train eval mode 
+	train will not freeze BN, Dropout
 ### 待做 
 	变为20类的detect
 	map查看效果，val的脚本
