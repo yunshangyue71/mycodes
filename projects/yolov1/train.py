@@ -204,10 +204,12 @@ if __name__ == '__main__':
                 addCofigFlag = False
 
             #add hist per epoch
-            if niter % len(trainLoader) == 0:
+            # if niter % len(trainLoader) == 0:
             # if niter % 1 == 0:
-                for name, param in network.state_dict().items():
+            #     for name, param in network.state_dict().items():
+                for name, param in network.named_parameters():
                     writer.add_histogram(name, param.clone().cpu().data.numpy(), int(niter / len(trainLoader)))
+                    writer.add_histogram(name+"/grad", param.grad.clone().cpu().numpy(), int(niter / len(trainLoader)))
 
             #if need , i can add any 4d tensor  to supervise the value
 
