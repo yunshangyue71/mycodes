@@ -2,16 +2,17 @@ from data.dataloader_detection import ListDataset
 from data.collate_function import collate_function
 from config.config import load_config, cfg
 from net.resnet import ResNet, ResnetBasic,ResnetBasicSlim
+from net.hourglass import Number
 from utils.nms_np_simple import nms
 from data.dataloader_test_detection import ListDataset as testListDataset
 from data.resize_uniform import resizeUniform
 
-from dataY.yolov1_dataY import DataY
+from dataY.datay import DataY
 from net.yolov1 import YOLOv1
 import numpy as np
 import cv2
-from loss.yololoss import yoloLoss
-from dataY.yolov1_dataY import DataY
+from loss.loss_yolov1 import yoloLoss
+from dataY.datay import DataY
 import time
 import math
 import torch
@@ -44,7 +45,7 @@ def post(pred, dic):
         """根据置信度来判断哪个网络有"""
         coobjMask1 = apred[:,:,4] > dic["scoreThresh"]
         for j in range(dic["bboxPredNum"]):
-            coobjMask1 = torch.logical_or(coobjMask1, apred[:, :, 4 + i * 5] > dic["scoreThresh"])
+            coobjMask1 = torch.logical_or(coobjMask1, apred[:, :, 4 + j * 5] > dic["scoreThresh"])
 
         """每个cell 选择最大置信度的哪个"""
         confPred = apred[:, :, 4:5 * dic["bboxPredNum"]:5]
@@ -88,27 +89,31 @@ def post(pred, dic):
 
 if __name__ == '__main__':
     """config"""
-    load_config(cfg, "./config/config.yaml")
+    load_config(cfg, "./config/config_helmet.yaml")
     print(cfg)
     device = torch.device('cuda:0')
 
-    batchsize = 2
+    batchsize = 16
     showFlag = 1
-    saveFlag = 0
-    saveDir = ""
-
+    txtsaveFlag = 0
+    txtsaveDir = ""
+    videoFlag = 1
+    videoSavePath = "./helmet.avi"
+    videoSaveSize = (448*2,448)#wh
+    waitTime = 0
     mode = 1
+
 
     # 如果是test mode 没有label 信息， 只能是预测
     # cam Mode 调用摄像头
     # val model这个有label信息，在show的时候会展示label
     modeDict = {0:"testMode", 1:"valMode", 2:"camMode"}
     postDict = {"scoreThresh": 0.3,
-                "iouThresh": 0.4,
-                "netInputHw":(448,448),
-                "bboxPredNum": cfg.model.bboxPredNum,
-                "clsNum":cfg.model.clsNum,
-                "stride":cfg.model.stride,
+                "iouThresh": 0.1,
+                "netInputHw":(800,800),
+                "bboxPredNum": cfg.model.bboxPredNum,#1
+                "clsNum":cfg.model.clsNum,#20,
+                "stride":cfg.model.stride,#64
                 }
 
     """dataset"""
@@ -140,16 +145,21 @@ if __name__ == '__main__':
 
     """准备网络"""
     # network = ResNet(ResnetBasic, [2, 2, 2, 2], channel_out = 15)
-    network = ResNet(ResnetBasicSlim,
-                     # [2, 2, 2, 2],
-                     [3, 4, 6, 3],
-                     channel_in=cfg.data.imgChannelNumber,
-                     channel_out=(cfg.model.bboxPredNum * 5 + cfg.model.clsNum))
+    # network = ResNet(ResnetBasicSlim,
+    #                  [2, 2, 2, 2],
+                     # [3, 4, 6, 3],
+                     # channel_in=cfg.data.imgChannelNumber,
+                     # channel_out=(cfg.model.bboxPredNum * 5 + cfg.model.clsNum))
+    network = Number(cfg.data.imgChannelNumber, cfg.model.bboxPredNum * 5 + cfg.model.clsNum)
     network = network.eval()
     # network = YOLOv1(params={"dropout": 0.5, "num_class": cfg.model.clsNum})
     network.to(device)
     weights = torch.load(cfg.dir.modelSaveDir + cfg.dir.modelName)  # 加载参数
     network.load_state_dict(weights["savedModel"])  # 给自己的模型加载参数
+
+    """ video Writer"""
+    fourcc = cv2.VideoWriter_fourcc(*'XVID')
+    writer = cv2.VideoWriter(videoSavePath, fourcc, 20.0, videoSaveSize, True)
 
     with torch.no_grad():
         if modeDict[mode] == "camMode":
@@ -188,13 +198,14 @@ if __name__ == '__main__':
                     imgp = plotBox(imgp, x1, y1, x2, y2,
                                    ["s: " + str(round(score, 3)), "c: " + cfg.clsname[cls]])
                 cv2.imshow("pred", imgp)
-                cv2.waitKey()
+                cv2.waitKey(waitTime)
                 if cv2.waitKey(1) & 0xFF == 32:
                     break
 
 
         if modeDict[mode] == "valMode" or modeDict[mode] == "testMode":
             for id, infos in enumerate(dataLoader): #每个batch
+                if id % 200 == 0:print(id, "-", len(dataLoader))
                 """forward and pred"""
                 imgs = infos['images']
                 imgs = imgs.to(device).float()
@@ -216,6 +227,7 @@ if __name__ == '__main__':
                         image = image.to('cpu').numpy()
                         image = image.transpose(1, 2, 0).astype(np.uint8)
                         image = cv2.UMat(image).get()
+                        image = cv2.cvtColor(image, cv2.COLOR_RGB2BGR) #
                         imgt = np.copy(image)
                         imgp = np.copy(image)
 
@@ -231,7 +243,7 @@ if __name__ == '__main__':
                             print("pred[%d x1:%.2f y1:%.2f x2:%.2f y2:%.2f w:%.2f h:%.2f score: %.2f i:%d j:%d "%(
                                 i, x1,y1, x2, y2,x2-x1,y2-y1,score, ii, jj)+ cfg.clsname[cls] +"]")
                         cv2.imshow("pred", imgp)
-                        cv2.waitKey()
+                        cv2.waitKey(waitTime)
 
                     if showFlag and not modeDict[mode] == "testModeFlag":# test mode 没有target
                         """read target"""
@@ -251,11 +263,22 @@ if __name__ == '__main__':
                                 x1, y1,x1+w+1,y1+h+1, w, h, ii, jj)+ cfg.clsname[cls]+"]")
                         print(annoName)
                         cv2.imshow("target", imgt)
-                        cv2.waitKey()
+                        cv2.waitKey(waitTime)
                         print("-"*50)
 
 
-                    if saveFlag and  modeDict[mode] == "valModeFlag":
-                        np.savetxt(saveDir + infos["annoName"][bcid],dets)
-                    if saveFlag and modeDict[mode] == "testModeFlag":
-                        np.savetxt(saveDir + infos["imgName"][bcid].split["."][0]+".txt",dets)
+                    """ save txt"""
+                    if txtsaveFlag and  modeDict[mode] == "valModeFlag":
+                        np.savetxt(txtsaveDir + infos["annoName"][bcid],dets)
+                    if txtsaveFlag and modeDict[mode] == "testModeFlag":
+                        np.savetxt(txtsaveDir + infos["imgName"][bcid].split["."][0]+".txt",dets)
+
+                    """save video"""
+                    if videoFlag:
+                        if modeDict[mode] == "test":
+                            img = imgp
+                        else:
+                            img = np.hstack((imgp, imgt))
+
+                        writer.write(img)
+

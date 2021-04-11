@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="ChangeListManager">
+    <list default="true" id="29d94c8c-d688-4b32-8c17-73abe88c532d" name="Default Changelist" comment="">
+      <change afterPath="$PROJECT_DIR$/../yolov1/eda/__init__.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/../yolov1/eda/detect.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/../yolov1/ex2.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../yolov1/README.md" beforeDir="false" afterPath="$PROJECT_DIR$/../yolov1/README.md" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../yolov1/config/config.yaml" beforeDir="false" afterPath="$PROJECT_DIR$/../yolov1/config/config.yaml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../yolov1/data/dataloader_detection.py" beforeDir="false" afterPath="$PROJECT_DIR$/../yolov1/data/dataloader_detection.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../yolov1/dataY/yolov1_dataY.py" beforeDir="false" afterPath="$PROJECT_DIR$/../yolov1/dataY/yolov1_dataY.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../yolov1/net/resnet.py" beforeDir="false" afterPath="$PROJECT_DIR$/../yolov1/net/resnet.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../yolov1/test_apic.py" beforeDir="false" afterPath="$PROJECT_DIR$/../yolov1/test_apic.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../yolov1/train.py" beforeDir="false" afterPath="$PROJECT_DIR$/../yolov1/train.py" afterDir="false" />
+    </list>
+    <option name="SHOW_DIALOG" value="false" />
+    <option name="HIGHLIGHT_CONFLICTS" value="true" />
+    <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
+    <option name="LAST_RESOLUTION" value="IGNORE" />
+  </component>
+  <component name="ProjectId" id="1qjSIob7LPxacCOnB1P1oFAdWrC" />
+  <component name="ProjectLevelVcsManager" settingsEditedManually="true" />
+  <component name="ProjectViewState">
+    <option name="hideEmptyMiddlePackages" value="true" />
+    <option name="showLibraryContents" value="true" />
+  </component>
+  <component name="PropertiesComponent">
+    <property name="RunOnceActivity.OpenProjectViewOnStart" value="true" />
+    <property name="last_opened_file_path" value="$PROJECT_DIR$" />
+  </component>
+  <component name="SpellCheckerSettings" RuntimeDictionaries="0" Folders="0" CustomDictionaries="0" DefaultDictionary="application-level" UseSingleDictionary="true" transferred="true" />
+  <component name="TaskManager">
+    <task active="true" id="Default" summary="Default task">
+      <changelist id="29d94c8c-d688-4b32-8c17-73abe88c532d" name="Default Changelist" comment="" />
+      <created>1617591428608</created>
+      <option name="number" value="Default" />
+      <option name="presentableId" value="Default" />
+      <updated>1617591428608</updated>
+    </task>
+    <servers />
+  </component>
+</project>

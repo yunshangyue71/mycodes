@@ -1,0 +1,52 @@
+clsname :
+  {0: "head", 1: "helmet"}
+dir:
+  modelSaveDir: '/media/q/deep/me/model/yolov1_helmet3/weight/'
+  logSaveDir: '/media/q/deep/me/model/yolov1_helmet3/log/'
+  trainImgDir: "/media/q/data/datasets/helmet/helm/images/train/"
+  trainAnnoDir: "/media/q/data/datasets/helmet/helm/format_me/train/"
+  valImgDir: "/media/q/data/datasets/helmet/helm/images/valid/"
+  valAnnoDir: "/media/q/data/datasets/helmet/helm/format_me/valid/"
+
+  modelNameSuffix: ""     #
+  modelName : '6b.pth'
+  modelReloadFlag: 1
+data:
+  augment: 1
+  normalize: [[103.53, 116.28, 123.675], [57.375, 57.12, 58.395]] #[mean, std]
+  imgChannelNumber: 3
+  shuffle: 1
+
+model:
+#  netInput: (448, 448) #hw
+#  featSize: (7, 7)
+#  stride : 64
+#  clsNum: 20
+  netInput: (448, 448) #hw
+  featSize: (14, 14)
+  stride : 32
+  clsNum: 2
+  bboxPredNum: 1
+  imgChannelNumber: 3
+
+loss:
+  noobj: 0.1
+  obj: 1
+
+  cls: 3
+  conf: 3
+  box: 5
+  l2: 0.00005
+
+train:
+  workers: 4
+  batchSize: 48
+  lr0: 0.01 #0.00003
+  warmupLr0: 0.000001
+  warmupBatch: 1000
+
+#default
+  epoch: 30000
+  lrReduceFactor: 1
+  lrReduceEpoch: 1    # N epoch, lr must  times lrReduceFactor
+  lrPatience: 2 # train loss or val score will not improve, in N epoch

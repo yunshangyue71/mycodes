@@ -3,8 +3,9 @@ from data.collate_function import collate_function
 from config.config import load_config, cfg
 from net.resnet import ResNet, ResnetBasic, ResnetBasicSlim
 from net.yolov1 import YOLOv1
-from loss.yololoss import yoloLoss
-from dataY.yolov1_dataY import DataY
+from net.hourglass import Number
+from loss.loss_yolov1 import yoloLoss
+from dataY.datay import DataY
 from loss.L1L2loss import Regularization
 
 from torch.utils.data import SubsetRandomSampler
@@ -17,7 +18,7 @@ import time
 
 if __name__ == '__main__':
     """config"""
-    cfgpath = "./config/config.yaml"
+    cfgpath = "./config/config_helmet.yaml"
     load_config(cfg, cfgpath)
     print(cfg)
     device = torch.device('cuda:0')
@@ -54,12 +55,14 @@ if __name__ == '__main__':
                   clsNum=cfg.model.clsNum)
 
     """准备网络"""
-    network = ResNet(ResnetBasicSlim,
-                     # [2, 2, 2, 2],
-                     [3, 4, 6, 3],
-                     channel_in=cfg.data.imgChannelNumber,
-                     channel_out=(cfg.model.bboxPredNum * 5 + cfg.model.clsNum))
+    # network = ResNet(ResnetBasicSlim,
+    #                  [2, 2, 2, 2],
+    #                  [1,1,1,1],
+    #                  [3, 4, 6, 3],
+                     # channel_in=cfg.data.imgChannelNumber,
+                     # channel_out=(cfg.model.bboxPredNum * 5 + cfg.model.clsNum))
     # network = YOLOv1(params={"dropout": 0.5, "num_class": cfg.model.clsNum})
+    network = Number(cfg.data.imgChannelNumber, cfg.model.bboxPredNum * 5 + cfg.model.clsNum)
     network.to(device)
     startEpoch = 1
     if cfg.dir.modelReloadFlag:
@@ -84,7 +87,7 @@ if __name__ == '__main__':
     # scheduler = optim.lr_scheduler.ReduceLROnPlateau(optimizer, mode='min', patience=cfg.train.lrPatience)
 
     """lr warm up"""
-    if cfg.train.warmupBatch is not None and not cfg.dir.modelReloadFlag:# reload  not warmup
+    if cfg.train.warmupBatch is not None :#and not cfg.dir.modelReloadFlag:# reload  not warmup
         warmUpFlag = True
     else:
         warmUpFlag = False
@@ -138,13 +141,10 @@ if __name__ == '__main__':
             bboxesGt = infos['bboxesGt']
             classesGt = infos['classes']
             target = datay.do2(bboxesGt, classesGt, pred)
-            # if classesGt[0][0][0] == -1:
-            #     print("")
 
             """cal loss"""
             lsInfo = lossF.do(pred, target)
-            loss = lsInfo["conf"] * cfg.loss.conf + lsInfo["box"] * cfg.loss.box + lsInfo[
-                "cls"] * cfg.loss.cls * bool(cfg.model.clsNum - 1)
+            loss = lsInfo["conf"]  + lsInfo["box"]  + lsInfo["cls"]  * bool(cfg.model.clsNum - 1)
             loss = loss / cfg.train.batchSize
             l1, l2 = Regularization(network)
             loss += cfg.loss.l2 * l2
@@ -152,7 +152,7 @@ if __name__ == '__main__':
             """backward"""
             optimizer.zero_grad()
             loss.backward()
-            nn.utils.clip_grad_value_(network.parameters(), 0.5)  # gradient clip
+            nn.utils.clip_grad_value_(network.parameters(), 100)  # gradient clip
             optimizer.step()
             # scheduler.step(loss) #可以使其他的指标
 
@@ -164,18 +164,25 @@ if __name__ == '__main__':
                 lsBox = torch.clone(lsInfo['box']).to('cpu').numpy()
                 lsCls = torch.clone(lsInfo['cls']).to('cpu').numpy()
                 if id % 30 == 0:
-                    print("[bc:{}/{} e: {}/{} total_bc:{} per:{:.3f}%]".\
-                          format(id,len(trainLoader), e,cfg.train.epoch, batchNum,
-                                 float(niter*100)/batchNum ),
-                          " loss:%.4f" % lossS, " lsConf:%.4f"% lsConf, " lsCls:%.4f"% lsCls, " lsBox:%.4f"% lsBox,"l2:%.4f"%l2,
-                          " lr:%.7f"%lr)
+                    print("[bc:{}/{} e: {}/{} total_bc:{} per:{:.3f}%]".format(
+                        id,len(trainLoader), e,cfg.train.epoch, batchNum, float(niter*100)/batchNum ),
+                          "loss:[{:.4f} conf:{:.4f} cls:{:.4f} box:{:.4f} l2:{:.4f} lr:{:.7f}".format(
+                              lossS/cfg.train.batchSize, lsConf/cfg.train.batchSize, lsCls/cfg.train.batchSize, lsBox/cfg.train.batchSize, l2, lr                      )
+                    )
 
             """tensorboardX to view"""
             #loss add per iter
             writer.add_scalars("loss/scalar_group",
-                               {"loss":loss,"lossConf":lsInfo['conf'],
-                                "lossBox":lsInfo['box'],"lossCls":lsInfo['cls'],
-                                "l2Loss":l2, "lr":lr}, niter)
+                               {"loss":loss,
+                                #"Conf":lsInfo['conf'],
+                                "conf":lsInfo['conf']/cfg.train.batchSize,
+                                #"Box":lsInfo['box'],
+                                "box":lsInfo["box"]/cfg.train.batchSize,
+                                #"Cls":lsInfo['cls'],
+                                "cls":lsInfo["cls"]/cfg.train.batchSize,
+                                #"L2":l2,
+                                "l2":l2*cfg.loss.l2,
+                                "lr":lr}, niter)
 
 
             #add graph only once
@@ -198,13 +205,13 @@ if __name__ == '__main__':
                 txt =""
                 for key,value in cfg.items():
                     for k, v in value.items():
-                        txt += str(key) + " " + str(k) +": " + str(v) + "\n"
+                        txt += str(key) + " " + str(k) +": " + str(v) + "     \n"
                 # print(txt)
                 writer.add_text("config", txt)
                 addCofigFlag = False
 
             #add hist per epoch
-            # if niter % len(trainLoader) == 0:
+            if niter % len(trainLoader) == 0:
             # if niter % 1 == 0:
             #     for name, param in network.state_dict().items():
                 for name, param in network.named_parameters():

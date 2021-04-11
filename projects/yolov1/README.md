@@ -49,6 +49,9 @@
 	lr stage , can deel this problem , when this model trained well , the l2 is not big 
 ### train eval mode 
 	train will not freeze BN, Dropout
+### 2021.4.9
+#### set the l2 loss =0, and the grad clip is -100, 100, box loss contribute theee e e le le loe loe loss
+#### loss class times loss weight, final loss times again
 ### 待做 
 	变为20类的detect
 	map查看效果，val的脚本

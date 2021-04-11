@@ -19,7 +19,7 @@ def load_config(cfg, yamlPath):
 
 if __name__ == '__main__':
     #具体怎么使用
-    yamlPath = './config.yaml'
+    yamlPath = './config_helmet.yaml'
     load_config(cfg, yamlPath)
     #cfg这个就可以使用了
     print(cfg)
