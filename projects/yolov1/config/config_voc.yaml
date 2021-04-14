@@ -5,30 +5,17 @@ clsname :
            15: 'pottedplant',16: 'sheep',17: 'sofa',18: 'train',19: 'tvmonitor'}
 
 dir:
-#  trainImgDir: 'E:/code/other_data/onevoc/img/'
-#  trainAnnoDir: 'E:/code/other_data/onevoc/anno/'
-#  valImgDir: 'E:/code/other_data/onevoc/img/'
-#  valAnnoDir: 'E:/code/other_data/onevoc/anno/'
-#  modelSaveDir: '/media/q/deep/me/model/'
+  trainImgDir: "/media/q/data/datasets/VOC/VOC127/JPEGImages/"
+  trainAnnoDir: "/media/q/data/datasets/VOC/VOC127/format_me/Main/all/trainval_diff1/"
+  valImgDir: "/media/q/data/datasets/VOC/VOC2007_test/JPEGImages/"
+  valAnnoDir: "/media/q/data/datasets/VOC/VOC2007_test/format_me/Main/all/trainval_diff1/"
+  modelName : '62b.pth'
+  modelReloadFlag: 1
 
-#  trainImgDir: "/media/q/data/datasets/VOC/VOC127/JPEGImages/"
-#  trainAnnoDir: "/media/q/data/datasets/VOC/VOC127/format_me/Main/all/trainval_diff1/"
-#  valImgDir: "/media/q/data/datasets/VOC/VOC127/JPEGImages/"
-#  valAnnoDir: "/media/q/data/datasets/VOC/VOC127/format_me/Main/all/trainval_diff1/"
-#  valImgDir: "/media/q/data/datasets/VOC/VOC2007_test/JPEGImages/"
-#  valAnnoDir: "/media/q/data/datasets/VOC/VOC2007_test/format_me/Main/all/trainval_diff1/"
-#  modelName : '680b.pth'
-#  modelReloadFlag: 0
+  logSaveDir: '/media/q/deep/me/model/yolov1/'
 
-  modelSaveDir: '/media/q/deep/me/model/yolov1/weight/'
-  logSaveDir: '/media/q/deep/me/model/yolov1/log/'
-  trainImgDir: "/media/q/data/datasets/helmet/helm/images/train/"
-  trainAnnoDir: "/media/q/data/datasets/helmet/helm/labels/train/"
-  valImgDir: "/media/q/data/datasets/helmet/helm/images/valid/"
-  valAnnoDir: "/media/q/data/datasets/helmet/helm/labels/train/"
 #  modelNameSuffix: ""     #
-  modelName : '680b.pth'
-  modelReloadFlag: 0
+
 data:
   augment: 1
   normalize: [[103.53, 116.28, 123.675], [57.375, 57.12, 58.395]] #[mean, std]
@@ -44,18 +31,18 @@ model:
   imgChannelNumber: 3
 
 loss:
-  noobj: 0.025
+  noobj: 0.25
   obj: 1
 
   cls: 1
   conf: 1
-  box: 10
+  box: 5
   l2: 0.00005
 
 train:
   workers: 4
   batchSize: 16
-  lr0: 0.0003 #0.00003
+  lr0: 0.0001 #0.00003
   warmupLr0: 0.000001
   warmupBatch: 1000
 

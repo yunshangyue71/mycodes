@@ -2,7 +2,7 @@ from data.dataloader_detection import ListDataset
 from data.collate_function import collate_function
 from config.config import load_config, cfg
 from net.resnet import ResNet, ResnetBasic,ResnetBasicSlim
-from net.hourglass import Number
+from net.mynet import Number
 from utils.nms_np_simple import nms
 from data.dataloader_test_detection import ListDataset as testListDataset
 from data.resize_uniform import resizeUniform
@@ -89,7 +89,7 @@ def post(pred, dic):
 
 if __name__ == '__main__':
     """config"""
-    load_config(cfg, "./config/config_helmet.yaml")
+    load_config(cfg, "./config/config_voc.yaml")
     print(cfg)
     device = torch.device('cuda:0')
 
@@ -100,7 +100,7 @@ if __name__ == '__main__':
     videoFlag = 1
     videoSavePath = "./helmet.avi"
     videoSaveSize = (448*2,448)#wh
-    waitTime = 0
+    waitTime = 1
     mode = 1
 
 
@@ -108,9 +108,9 @@ if __name__ == '__main__':
     # cam Mode 调用摄像头
     # val model这个有label信息，在show的时候会展示label
     modeDict = {0:"testMode", 1:"valMode", 2:"camMode"}
-    postDict = {"scoreThresh": 0.3,
-                "iouThresh": 0.1,
-                "netInputHw":(800,800),
+    postDict = {"scoreThresh": 0.1,
+                "iouThresh": 0.4,
+                "netInputHw":(448,448),
                 "bboxPredNum": cfg.model.bboxPredNum,#1
                 "clsNum":cfg.model.clsNum,#20,
                 "stride":cfg.model.stride,#64
@@ -145,21 +145,21 @@ if __name__ == '__main__':
 
     """准备网络"""
     # network = ResNet(ResnetBasic, [2, 2, 2, 2], channel_out = 15)
-    # network = ResNet(ResnetBasicSlim,
-    #                  [2, 2, 2, 2],
-                     # [3, 4, 6, 3],
-                     # channel_in=cfg.data.imgChannelNumber,
-                     # channel_out=(cfg.model.bboxPredNum * 5 + cfg.model.clsNum))
-    network = Number(cfg.data.imgChannelNumber, cfg.model.bboxPredNum * 5 + cfg.model.clsNum)
+    network = ResNet(ResnetBasicSlim,
+                     # [2, 2, 2, 2],
+                     [3, 4, 6, 3],
+                     channel_in=cfg.data.imgChannelNumber,
+                     channel_out=(cfg.model.bboxPredNum * 5 + cfg.model.clsNum))
+    # network = Number(cfg.data.imgChannelNumber, cfg.model.bboxPredNum * 5 + cfg.model.clsNum)
     network = network.eval()
     # network = YOLOv1(params={"dropout": 0.5, "num_class": cfg.model.clsNum})
     network.to(device)
-    weights = torch.load(cfg.dir.modelSaveDir + cfg.dir.modelName)  # 加载参数
+    weights = torch.load(cfg.dir.logSaveDir +"weight/"+ cfg.dir.modelName)  # 加载参数
     network.load_state_dict(weights["savedModel"])  # 给自己的模型加载参数
 
     """ video Writer"""
     fourcc = cv2.VideoWriter_fourcc(*'XVID')
-    writer = cv2.VideoWriter(videoSavePath, fourcc, 20.0, videoSaveSize, True)
+    writer = cv2.VideoWriter(videoSavePath, fourcc, 1.0, videoSaveSize, True)
 
     with torch.no_grad():
         if modeDict[mode] == "camMode":

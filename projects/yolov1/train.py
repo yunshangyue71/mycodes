@@ -3,7 +3,7 @@ from data.collate_function import collate_function
 from config.config import load_config, cfg
 from net.resnet import ResNet, ResnetBasic, ResnetBasicSlim
 from net.yolov1 import YOLOv1
-from net.hourglass import Number
+from net.mynet import Number
 from loss.loss_yolov1 import yoloLoss
 from dataY.datay import DataY
 from loss.L1L2loss import Regularization
@@ -15,10 +15,12 @@ from torch import nn
 import torchvision.utils as vutils
 from tensorboardX import SummaryWriter
 import time
+import os
+import shutil
 
 if __name__ == '__main__':
     """config"""
-    cfgpath = "./config/config_helmet.yaml"
+    cfgpath = "./config/config_voc.yaml"
     load_config(cfg, cfgpath)
     print(cfg)
     device = torch.device('cuda:0')
@@ -55,18 +57,18 @@ if __name__ == '__main__':
                   clsNum=cfg.model.clsNum)
 
     """准备网络"""
-    # network = ResNet(ResnetBasicSlim,
-    #                  [2, 2, 2, 2],
-    #                  [1,1,1,1],
-    #                  [3, 4, 6, 3],
-                     # channel_in=cfg.data.imgChannelNumber,
-                     # channel_out=(cfg.model.bboxPredNum * 5 + cfg.model.clsNum))
+    network = ResNet(ResnetBasicSlim,
+                     # [2, 2, 2, 2],
+                     # [1,1,1,1],
+                     [3, 4, 6, 3],
+                     channel_in=cfg.data.imgChannelNumber,
+                     channel_out=(cfg.model.bboxPredNum * 5 + cfg.model.clsNum))
     # network = YOLOv1(params={"dropout": 0.5, "num_class": cfg.model.clsNum})
-    network = Number(cfg.data.imgChannelNumber, cfg.model.bboxPredNum * 5 + cfg.model.clsNum)
+    # network = Number(cfg.data.imgChannelNumber, cfg.model.bboxPredNum * 5 + cfg.model.clsNum)
     network.to(device)
     startEpoch = 1
     if cfg.dir.modelReloadFlag:
-        savedDict = torch.load(cfg.dir.modelSaveDir + cfg.dir.modelName)  # 加载参数
+        savedDict = torch.load(cfg.dir.logSaveDir +"weight/"+ cfg.dir.modelName)  # 加载参数
         weights =  savedDict['savedModel']
         startEpoch = savedDict['epoch']+1
         network.load_state_dict(weights)  # 给自己的模型加载参数
@@ -96,11 +98,12 @@ if __name__ == '__main__':
 
     """log """
     logtime = time.strftime("%Y-%m-%d_%H-%M-%S",time.localtime())
-    logdir = cfg.dir.logSaveDir + "startEpoch_" + str(startEpoch) + "__Time_"+str(logtime) +  "/"
+    logdir = cfg.dir.logSaveDir + "log/" + "startEpoch_" + str(startEpoch) + "__Time_"+str(logtime) +  "/"
     writer = SummaryWriter(logdir)
     addGraphFlag = True
     addImgFlag = True
     addCofigFlag = True
+    shutil.copy(cfgpath, logdir)
     """打开 
     tensorboard - -logdir
     runs
@@ -223,9 +226,12 @@ if __name__ == '__main__':
 
         if e % 1 == 0:
             """参数"""
-            savePath = cfg.dir.modelSaveDir + str(e) + 'b.pth'
-            saveDict = {"savedModel":network.state_dict(),
-                        "epoch":e,
+            savePath = cfg.dir.logSaveDir + "weight/" + str(e) + 'b.pth'
+            saveDict = {"savedModel": network.state_dict(),
+                        "epoch": e,
                         }
+            for key, value in cfg.items():
+                for k, v in value.items():
+                    saveDict[k] = v
             # torch.save(network.state_dict(), savePath)  # save
             torch.save(saveDict, savePath)

@@ -75,7 +75,7 @@ class Number(nn.Module):
         self.conv32_2 = ConvBnReluPool(inChannels=128, outChannels=128, kernelSize=3, stride=1, bias=True, bn=True,
                                      relu=True, maxp2=False)
         self.conv4 = ConvBnReluPool(inChannels=128, outChannels=outc, kernelSize=3, stride=1, bias=True, bn=False,
-                                    relu=True, maxp2=True)
+                                    relu=False, maxp2=True)
         self._initialize_weights()
 
     def _initialize_weights(self):
